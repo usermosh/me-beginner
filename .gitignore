@@ -1,0 +1,19 @@
+# .gitignore for PHP/XAMPP beginner project
+.env
+.env.local
+/node_modules/
+/vendor/
+/.idea/
+/.vscode/
+*.log
+*.sqlite
+*.db
+.DS_Store
+Thumbs.db
+composer.lock
+phpunit.xml
+.phpunit.result.cache
+
+# OS files
+ehthumbs.db
+Icon
