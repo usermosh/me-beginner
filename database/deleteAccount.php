@@ -28,12 +28,9 @@ if(isset($_POST['btnsubmit'])) { // delete
     }
 }
 ?>
-
-<!DOCTYPE html>
 <html>
 <head>
     <title>Delete Account - Technical Management System</title>
-
     <style>
         body {
             font-family: 'Times New Roman', Times, serif;
@@ -43,7 +40,6 @@ if(isset($_POST['btnsubmit'])) { // delete
             align-items: center;
             height: 100vh;
         }
-
         .confirm-box {
             background: #f5f5f5;
             border: 1px solid #000;
@@ -51,12 +47,10 @@ if(isset($_POST['btnsubmit'])) { // delete
             width: 350px;
             text-align: center;
         }
-
         .confirm-box p {
             font-size: 16px;
             margin-bottom: 20px;
         }
-
         input[type="submit"] {
             padding: 6px 15px;
             font-weight: bold;
@@ -64,11 +58,9 @@ if(isset($_POST['btnsubmit'])) { // delete
             border-radius: 10px;
             cursor: pointer;
         }
-
         input[type="submit"]:hover {
             background: #6dadee;
         }
-
         .cancel-link {
             margin-left: 15px;
             text-decoration: none;
@@ -79,29 +71,23 @@ if(isset($_POST['btnsubmit'])) { // delete
             padding: 6px 15px;
             background: #ddd;
         }
-
         .cancel-link:hover {
             background: #ff0000;
         }
     </style>
 </head>
-
 <body>
-
-<div class="confirm-box">
-    <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
-        <input
-            type="hidden"
-            name="txtusername"
-            value="<?php echo trim($_GET['username']); ?>"
-        >
-
-        <p>Are you sure you want to delete this account?</p>
-
-        <input type="submit" name="btnsubmit" value="Yes">
-        <a href="accountManagement.php" class="cancel-link">No</a>
-    </form>
-</div>
-
+    <div class="confirm-box">
+        <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
+            <input
+                type="hidden"
+                name="txtusername"
+                value="<?php echo trim($_GET['username']); ?>"
+            >
+            <p>Are you sure you want to delete this account?</p>
+            <input type="submit" name="btnsubmit" value="Yes">
+            <a href="accountManagement.php" class="cancel-link">No</a>
+        </form>
+    </div>
 </body>
 </html>

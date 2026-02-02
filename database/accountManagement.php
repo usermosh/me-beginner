@@ -65,10 +65,14 @@ if (isset($_GET['delete'])) {
         #createAccountLink {
             background-color: #6dadee;
         }
+        #equipmentLink {
+            background-color: #99d4ff;
+        }
         #logoutLink {
             background-color: #f86f6f;
         }
         #createAccountLink,
+        #equipmentLink,
         #logoutLink {
             text-decoration: none;
             color: #000;
@@ -109,6 +113,7 @@ if (isset($_SESSION['success'])) {
 
 <form action="<?= htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
     <a href="createAccount.php" id="createAccountLink">Create Account</a>
+    <a href="equipmentManagement.php" id="equipmentLink">Equipment Management</a>
     <a href="logout.php" id="logoutLink">Logout</a>
     <br><br>
     Search:
