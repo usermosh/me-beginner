@@ -80,38 +80,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnCancel'])) {
 <head>
     <title>Update Ticket</title>
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1B2D42 0%, #0f1619 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 30px 20px;
         }
 
         .container {
             max-width: 700px;
             margin: 0 auto;
             background: white;
-            padding: 30px;
+            padding: 50px 40px;
             border-radius: 8px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
         h1 {
-            color: #2c3e50;
+            color: #1B2D42;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 22px;
         }
 
         label {
             display: block;
-            font-weight: bold;
-            color: #2c3e50;
+            font-weight: 600;
+            color: #4a5568;
             margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         input[type="text"],
@@ -120,19 +131,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnCancel'])) {
         textarea {
             width: 100%;
             padding: 12px;
-            border: 1px solid #bdc3c7;
+            border: 1px solid #d1d5db;
             border-radius: 4px;
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: inherit;
             font-size: 14px;
-            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
         input[type="text"]:focus,
         select:focus,
         textarea:focus {
             outline: none;
-            border-color: #2980b9;
-            box-shadow: 0 0 5px rgba(41, 128, 185, 0.3);
+            border-color: #1B2D42;
+            box-shadow: 0 0 0 3px rgba(27, 45, 66, 0.1);
         }
 
         textarea {
@@ -141,69 +152,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnCancel'])) {
         }
 
         .ticket-number-display {
-            background: #ecf0f1;
+            background: #f5f6f8;
             padding: 12px;
             border-radius: 4px;
-            font-weight: bold;
-            color: #2c3e50;
+            font-weight: 600;
+            color: #1B2D42;
             font-family: monospace;
+            border: 1px solid #e5e7eb;
         }
 
         .form-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: center;
-            margin-top: 30px;
+            margin-top: 35px;
         }
 
         button {
-            padding: 12px 30px;
+            padding: 12px 32px;
             border: none;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
-            transition: background 0.3s;
-            font-weight: bold;
+            transition: background 0.3s, transform 0.2s;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .btn-save {
-            background: #27ae60;
+            background: #5a8b5a;
             color: white;
         }
 
         .btn-save:hover {
-            background: #1e8449;
+            background: #4a6b4a;
+            transform: translateY(-1px);
         }
 
         .btn-cancel {
-            background: #95a5a6;
+            background: #6b7280;
             color: white;
         }
 
         .btn-cancel:hover {
-            background: #7f8c8d;
+            background: #4b5563;
+            transform: translateY(-1px);
         }
 
         .message {
-            padding: 15px;
+            padding: 14px;
             border-radius: 4px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            font-size: 13px;
         }
 
         .error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #7f1d1d;
         }
 
         .info {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
-            padding: 12px;
+            background: #f5f6f8;
+            border: 1px solid #e5e7eb;
+            color: #4a5568;
+            padding: 14px;
             border-radius: 4px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             font-size: 13px;
+            border-left: 3px solid #1B2D42;
         }
     </style>
 </head>

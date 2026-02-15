@@ -63,172 +63,238 @@ if (isset($_GET['deleteEquipment'])) {
     <title>Equipment Management - Technical Management System</title>
 
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Times New Roman', Times, serif;
-            margin: 20px;
-            background-color: #bbd8f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f6f8;
+            padding: 30px 20px;
+            color: #2c3e50;
         }
         
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 35px;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
         h1 {
             margin: 0;
-            color: #333;
+            color: #1B2D42;
+            font-size: 28px;
+            font-weight: 600;
         }
         
         .header-links {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            flex-wrap: wrap;
         }
         
         #addEquipmentLink, #logsLink, #accountLink, #logoutLink {
             text-decoration: none;
-            color: #000;
-            font-weight: bold;
-            padding: 8px 12px;
-            border: 1px solid #000;
-            border-radius: 10px;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 11px 18px;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            font-size: 13px;
+            letter-spacing: 0.5px;
         }
         
         #addEquipmentLink {
-            background-color: #6dadee;
+            background-color: #5a8b5a;
+        }
+
+        #addEquipmentLink:hover {
+            background-color: #4a6b4a;
+            transform: translateY(-1px);
         }
         
         #logsLink {
-            background-color: #ffc966;
+            background-color: #6b7280;
+        }
+
+        #logsLink:hover {
+            background-color: #4b5563;
+            transform: translateY(-1px);
         }
         
         #accountLink {
-            background-color: #99d4ff;
+            background-color: #1B2D42;
+        }
+
+        #accountLink:hover {
+            background-color: #0f1619;
+            transform: translateY(-1px);
         }
         
         #logoutLink {
-            background-color: #f86f6f;
+            background-color: #8b5a5a;
+        }
+
+        #logoutLink:hover {
+            background-color: #6b4545;
+            transform: translateY(-1px);
         }
         
         .search-section {
-            background-color: #fff;
-            padding: 15px;
+            background-color: white;
+            padding: 20px;
             border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
         }
         
         .search-section input[type="text"] {
-            width: 300px;
-            padding: 8px 12px;
-            border: 1px solid #ccc;
+            flex: 1;
+            min-width: 250px;
+            padding: 11px 14px;
+            border: 1px solid #d1d5db;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        .search-section input[type="text"]:focus {
+            outline: none;
+            border-color: #1B2D42;
+            box-shadow: 0 0 0 3px rgba(27, 45, 66, 0.1);
         }
         
         .search-section button {
-            padding: 8px 16px;
-            background-color: #2980b9;
+            padding: 11px 20px;
+            background-color: #1B2D42;
             color: #fff;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            transition: background 0.3s;
+            font-size: 13px;
+            letter-spacing: 0.5px;
         }
         
         .search-section button:hover {
-            background-color: #1f6391;
+            background-color: #0f1619;
         }
         
         .message {
-            padding: 10px;
-            margin-bottom: 15px;
+            padding: 14px;
+            margin-bottom: 20px;
             border-radius: 4px;
-            text-align: center;
+            font-size: 13px;
         }
         
         .success {
-            background-color: #c8f7c5;
-            border: 1px solid #28a745;
-            color: #155724;
+            background-color: #d1fae5;
+            border: 1px solid #6ee7b7;
+            color: #065f46;
         }
         
         .error {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background-color: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #7f1d1d;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
         }
         
         table thead {
-            background-color: #2c3e50;
+            background-color: #1B2D42;
             color: #fff;
         }
         
         table th {
-            padding: 12px;
+            padding: 14px;
             text-align: left;
-            border: 1px solid #ddd;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         table td {
-            padding: 10px 12px;
-            border: 1px solid #ddd;
+            padding: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+        }
+
+        table tbody tr:last-child td {
+            border-bottom: none;
         }
         
         table tbody tr:hover {
-            background-color: #f5f5f5;
+            background-color: #f9fafb;
         }
         
         .action-buttons {
             display: flex;
-            gap: 5px;
+            gap: 8px;
             flex-wrap: wrap;
         }
         
         .btn-update, .btn-delete {
-            padding: 6px 10px;
+            padding: 8px 14px;
             font-size: 12px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
+            font-weight: 600;
+            transition: all 0.3s;
         }
         
         .btn-update {
-            background-color: #ffc966;
-            color: #000;
+            background-color: #6b7280;
+            color: #ffffff;
         }
         
         .btn-update:hover {
-            background-color: #ffb347;
+            background-color: #4b5563;
         }
         
         .btn-delete {
-            background-color: #f86f6f;
-            color: #fff;
+            background-color: #8b5a5a;
+            color: #ffffff;
         }
         
         .btn-delete:hover {
-            background-color: #e55a5a;
+            background-color: #6b4545;
         }
         
         .no-results {
             text-align: center;
-            padding: 20px;
-            color: #666;
-            background-color: #fff;
+            padding: 30px;
+            color: #6b7280;
+            background-color: white;
             margin-top: 20px;
-            border-radius: 4px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>

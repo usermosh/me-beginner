@@ -9,81 +9,156 @@ include "sessionChecker.php";
     <title>Create New Account Page - Technical Management System</title>
 
     <style>
-        body {
+        * {
             margin: 0;
-            height: 100vh;
-            font-family: Arial, Helvetica, sans-serif;
-            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1B2D42 0%, #0f1619 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
+
         .form-container {
             background: #ffffff;
-            width: 420px;
-            padding: 35px;
+            width: 100%;
+            max-width: 420px;
+            padding: 50px 40px;
             border-radius: 8px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
+
         h2 {
             text-align: center;
-            color: #2c3e50;
-            margin-bottom: 10px;
+            color: #1B2D42;
+            margin-bottom: 12px;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
         }
+
         p {
             text-align: center;
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 25px;
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 30px;
         }
+
         label {
-            font-size: 14px;
-            color: #333;
+            font-size: 13px;
+            color: #4a5568;
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+
         input[type="text"],
         input[type="password"],
         select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 15px;
             border-radius: 4px;
-            border: 1px solid #ccc;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            font-family: inherit;
         }
+
         input:focus,
         select:focus {
             outline: none;
-            border-color: #2980b9;
-            box-shadow: 0 0 5px rgba(41,128,185,0.4);
+            border-color: #1B2D42;
+            box-shadow: 0 0 0 3px rgba(27, 45, 66, 0.1);
         }
+
         .show-pass {
             font-size: 13px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
         }
+
+        .show-pass label {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            color: #6b7280;
+            text-transform: none;
+            font-weight: 400;
+        }
+
+        .show-pass input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
         .actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-top: 25px;
         }
+
         input[type="submit"] {
-            background: #2980b9;
+            background: #1B2D42;
             color: #fff;
             border: none;
-            padding: 10px 22px;
+            padding: 12px 28px;
             border-radius: 4px;
             cursor: pointer;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: background 0.3s;
         }
+
         input[type="submit"]:hover {
-            background: #1f6391;
+            background: #0f1619;
         }
+
         .cancel {
-            font-size: 14px;
+            font-size: 13px;
             text-decoration: none;
-            color: #555;
+            color: #6b7280;
+            font-weight: 600;
+            transition: color 0.3s;
         }
+
         .cancel:hover {
-            text-decoration: underline;
+            color: #1B2D42;
+        }
+
+        .message-container {
+            margin-bottom: 20px;
+        }
+
+        .message-container div {
+            display: none;
+        }
+
+        .message-container div[style*="background"] {
+            display: block !important;
+            padding: 12px;
+            border-radius: 4px;
+            border: none !important;
+        }
+
+        .message-container div[style*="c8f7c5"] {
+            background: #d1fae5 !important;
+            color: #065f46 !important;
+        }
+
+        .message-container div[style*="f8d7da"] {
+            background: #fee2e2 !important;
+            color: #7f1d1d !important;
         }
     </style>
 </head>

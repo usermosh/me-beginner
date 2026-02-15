@@ -104,90 +104,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
     <title>Account Management - Technical Management System</title>
 
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Times New Roman', Times, serif;
-            margin: 20px;
-            background-color: #bbd8f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f6f8;
+            padding: 30px 20px;
+            color: #2c3e50;
+        }
+
+        h1 {
+            color: #1B2D42;
+            margin-bottom: 5px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        h4 {
+            color: #6b7280;
+            margin-bottom: 25px;
+            font-size: 14px;
+            font-weight: 400;
         }
 
         .nav-buttons {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 30px;
             flex-wrap: wrap;
         }
 
         .nav-link {
             text-decoration: none;
-            color: #000;
-            font-weight: bold;
-            padding: 8px 15px;
-            border: 1px solid #000;
-            border-radius: 10px;
-            background-color: #99d4ff;
-            transition: background-color 0.3s;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 11px 18px;
+            border: none;
+            border-radius: 4px;
+            background: #1B2D42;
+            transition: background 0.3s, transform 0.2s;
+            cursor: pointer;
+            font-size: 13px;
+            letter-spacing: 0.5px;
         }
 
         .nav-link:hover {
-            background-color: #6dadee;
+            background: #0f1619;
+            transform: translateY(-1px);
         }
 
-        .nav-link.active {
-            background-color: #6dadee;
+        .nav-link:active {
+            transform: translateY(0);
         }
 
-        #createAccountLink {
-            background-color: #6dadee;
-        }
-        #equipmentLink {
-            background-color: #99d4ff;
-        }
-        #ticketLink {
-            background-color: #99d4ff;
-        }
         #logoutLink {
-            background-color: #f86f6f;
+            background: #8b5a5a;
         }
-        #createAccountLink,
-        #equipmentLink,
-        #ticketLink,
-        #logoutLink {
-            text-decoration: none;
-            color: #000;
-            font-weight: bold;
-            padding: 6px 10px;
-            border: 1px solid #000;
-            border-radius: 10px;
+
+        #logoutLink:hover {
+            background: #6b4545;
         }
 
         .tabs {
             display: flex;
-            gap: 10px;
-            border-bottom: 2px solid #000;
-            margin: 20px 0;
+            gap: 0;
+            border-bottom: 2px solid #d1d5db;
+            margin: 30px 0 0 0;
+            background: white;
+            border-radius: 4px 4px 0 0;
         }
 
         .tab-btn {
-            background-color: #e0e0e0;
-            border: 1px solid #000;
-            padding: 10px 20px;
+            background-color: #e5e7eb;
+            border: none;
+            padding: 14px 24px;
             cursor: pointer;
-            font-weight: bold;
-            border-radius: 5px 5px 0 0;
-            transition: background-color 0.3s;
+            font-weight: 600;
+            border-radius: 0;
+            transition: all 0.3s;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            color: #6b7280;
+        }
+
+        .tab-btn:first-child {
+            border-radius: 4px 0 0 0;
         }
 
         .tab-btn:hover {
-            background-color: #d0d0d0;
+            background-color: #d1d5db;
         }
 
         .tab-btn.active {
-            background-color: #bbd8f5;
-            border-bottom: 2px solid #bbd8f5;
+            background-color: #1B2D42;
+            color: white;
+            border-bottom: 3px solid #1B2D42;
         }
 
         .tab-content {
             display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 0 4px 4px 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .tab-content.active {
@@ -197,113 +220,132 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
         table {
             border-collapse: collapse;
             width: 100%;
-            background-color: #f5f5f5;
+            background-color: white;
         }
+
         th, td {
-            border: 1px solid #000;
-            padding: 8px;
+            border: 1px solid #e5e7eb;
+            padding: 14px;
+            text-align: left;
         }
+
         th {
-            background: #bbbaba;
+            background: #1B2D42;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
         }
 
         .ticket-table {
             width: 100%;
             border-collapse: collapse;
-            background-color: #f5f5f5;
+            background-color: white;
             margin-top: 20px;
         }
 
         .ticket-table th, .ticket-table td {
-            border: 1px solid #000;
-            padding: 10px;
+            border: 1px solid #e5e7eb;
+            padding: 14px;
             text-align: left;
         }
 
         .ticket-table th {
-            background-color: #bbbaba;
-            font-weight: bold;
+            background-color: #1B2D42;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .ticket-table tr:hover {
-            background-color: #e8e8e8;
+            background-color: #f9fafb;
         }
 
         .badge {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             color: white;
         }
 
         .badge-hardware {
-            background-color: #e74c3c;
+            background-color: #8b5a5a;
         }
 
         .badge-software {
-            background-color: #9b59b6;
+            background-color: #5a5a8b;
         }
 
         .badge-connection {
-            background-color: #1abc9c;
+            background-color: #5a8b8b;
         }
 
         .badge-pending {
-            background-color: #f39c12;
+            background-color: #8b8b5a;
         }
 
         .badge-completed {
-            background-color: #27ae60;
+            background-color: #5a8b5a;
         }
 
         .badge-inprogress {
-            background-color: #3498db;
+            background-color: #6b7280;
         }
 
         .action-buttons {
             display: flex;
-            gap: 5px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
         .action-btn {
-            padding: 6px 12px;
+            padding: 8px 14px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
             text-decoration: none;
             display: inline-block;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            font-weight: 600;
         }
 
         .action-btn-view {
-            background-color: #3498db;
+            background-color: #1B2D42;
             color: white;
         }
 
         .action-btn-view:hover {
-            background-color: #2980b9;
+            background-color: #0f1619;
         }
 
         .action-btn-edit {
-            background-color: #f39c12;
+            background-color: #6b7280;
             color: white;
         }
 
         .action-btn-edit:hover {
-            background-color: #d68910;
+            background-color: #4b5563;
         }
 
         .action-btn-delete {
-            background-color: #e74c3c;
+            background-color: #8b5a5a;
             color: white;
         }
 
         .action-btn-delete:hover {
-            background-color: #c0392b;
+            background-color: #6b4545;
         }
 
         .modal {
@@ -325,9 +367,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
 
         .modal-content {
             background: white;
-            padding: 30px;
+            padding: 40px;
             border-radius: 8px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             max-width: 600px;
             width: 90%;
             max-height: 80vh;
@@ -338,14 +380,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #2c3e50;
-            padding-bottom: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 15px;
         }
 
         .modal-header h2 {
             margin: 0;
-            color: #2c3e50;
+            color: #1B2D42;
+            font-size: 20px;
         }
 
         .close-modal {
@@ -353,75 +396,120 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
             border: none;
             font-size: 24px;
             cursor: pointer;
-            color: #2c3e50;
+            color: #6b7280;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #1B2D42;
         }
 
         .detail-row {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #f5f5f5;
+            margin-bottom: 18px;
+            padding: 12px;
+            background-color: #f9fafb;
             border-radius: 4px;
+            border-left: 3px solid #1B2D42;
         }
 
         .detail-label {
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
+            font-weight: 600;
+            color: #1B2D42;
+            margin-bottom: 6px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .detail-value {
-            color: #34495e;
+            color: #4b5563;
+            font-size: 14px;
         }
 
         .message {
-            padding: 15px;
+            padding: 14px;
             border-radius: 4px;
             margin-bottom: 20px;
+            font-size: 13px;
         }
 
         .success {
-            background: #c8f7c5;
-            border: 1px solid #4caf50;
-            color: #2d662d;
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            color: #065f46;
         }
 
         .error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #7f1d1d;
         }
 
         .search-section {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
             flex-wrap: wrap;
         }
 
         .search-section input {
-            padding: 8px;
-            border: 1px solid #ccc;
+            padding: 11px 14px;
+            border: 1px solid #d1d5db;
             border-radius: 4px;
             flex: 1;
             min-width: 250px;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        .search-section input:focus {
+            outline: none;
+            border-color: #1B2D42;
+            box-shadow: 0 0 0 3px rgba(27, 45, 66, 0.1);
         }
 
         .search-section input[type="submit"] {
-            background-color: #6dadee;
-            color: #000;
-            font-weight: bold;
+            background-color: #1B2D42;
+            color: #ffffff;
+            font-weight: 600;
             cursor: pointer;
-            padding: 8px 15px;
+            padding: 11px 20px;
+            border: none;
+            transition: background 0.3s;
+            flex: 0;
+        }
+
+        .search-section input[type="submit"]:hover {
+            background-color: #0f1619;
         }
 
         .no-records {
-            padding: 20px;
+            padding: 30px;
             text-align: center;
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
             border-radius: 4px;
             margin-top: 20px;
+            color: #6b7280;
+        }
+
+        .add-new-btn {
+            display: inline-block;
+            background-color: #5a8b5a;
+            color: white;
+            padding: 11px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            transition: background 0.3s;
+        }
+
+        .add-new-btn:hover {
+            background-color: #4a6b4a;
         }
     </style>
 </head>

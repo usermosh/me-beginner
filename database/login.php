@@ -8,11 +8,16 @@ session_start();
     <title>Login Page - Technical Management System</title>
 
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1B2D42 0%, #0f1619 100%);
             height: 100vh;
-            font-family: Arial, Helvetica, sans-serif;
-            background: linear-gradient(135deg, #2c3e50, #4ca1af);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -21,57 +26,110 @@ session_start();
         .login-box {
             background: #ffffff;
             width: 380px;
-            padding: 40px;
+            padding: 50px 40px;
             border-radius: 8px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
         .login-box h1 {
             text-align: center;
-            margin-bottom: 30px;
-            color: #2c3e50;
+            margin-bottom: 35px;
+            color: #1B2D42;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
         }
 
         .login-box label {
             display: block;
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 6px;
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .login-box input[type="text"],
         .login-box input[type="password"] {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #d1d5db;
             border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .login-box input[type="text"]:focus,
+        .login-box input[type="password"]:focus {
+            outline: none;
+            border-color: #1B2D42;
+            box-shadow: 0 0 0 3px rgba(27, 45, 66, 0.1);
         }
 
         .show-pass {
             font-size: 13px;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .show-pass label {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            color: #6b7280;
+        }
+
+        .show-pass input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
         }
 
         .login-box input[type="submit"] {
             width: 100%;
-            padding: 10px;
-            background: #2980b9;
-            color: #fff;
+            padding: 12px;
+            background: #1B2D42;
+            color: #ffffff;
             border: none;
             border-radius: 4px;
-            font-size: 15px;
+            font-size: 14px;
             cursor: pointer;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: background 0.3s;
         }
 
         .login-box input[type="submit"]:hover {
-            background: #1f6391;
+            background: #0f1619;
         }
 
         .message {
             text-align: center;
-            margin-bottom: 15px;
-            font-size: 14px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .message div {
+            display: none;
+        }
+
+        .message div[style*="background"] {
+            display: block !important;
+            padding: 12px;
+            border-radius: 4px;
+            border: none !important;
+        }
+
+        .message div[style*="c8f7c5"] {
+            background: #d1fae5 !important;
+            color: #065f46 !important;
+        }
+
+        .message div[style*="f8d7da"] {
+            background: #fee2e2 !important;
+            color: #7f1d1d !important;
         }
     </style>
 </head>

@@ -10,114 +10,165 @@ require_once "config.php";
     <title>Equipment Logs - Technical Management System</title>
 
     <style>
-        body {
-            font-family: 'Times New Roman', Times, serif;
-            margin: 20px;
-            background-color: #bbd8f5;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1B2D42 0%, #0f1619 100%);
+            padding: 30px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
         }
-        
+
         h1 {
             margin: 0;
-            color: #333;
+            color: #1B2D42;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
         }
-        
+
         .header-links {
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
-        
+
         #backLink, #accountLink, #logoutLink {
             text-decoration: none;
-            color: #000;
-            font-weight: bold;
-            padding: 8px 12px;
-            border: 1px solid #000;
-            border-radius: 10px;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
         }
-        
+
         #backLink {
-            background-color: #6dadee;
+            background: linear-gradient(135deg, #1B2D42 0%, #132038 100%);
         }
-        
+
+        #backLink:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(27, 45, 66, 0.3);
+        }
+
         #accountLink {
-            background-color: #99d4ff;
+            background: linear-gradient(135deg, #1B2D42 0%, #132038 100%);
         }
-        
+
+        #accountLink:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(27, 45, 66, 0.3);
+        }
+
         #logoutLink {
-            background-color: #f86f6f;
+            background: linear-gradient(135deg, #8b5a5a 0%, #6b4444 100%);
         }
-        
+
+        #logoutLink:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(139, 90, 90, 0.3);
+        }
+
         .message {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            text-align: center;
+            padding: 14px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            border-left: 4px solid;
         }
-        
+
         .success {
-            background-color: #c8f7c5;
-            border: 1px solid #28a745;
-            color: #155724;
+            background-color: #f0fdf4;
+            border-left-color: #5a8b5a;
+            color: #3a5a3a;
         }
-        
+
         .error {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background-color: #fff5f5;
+            border-left-color: #8b5a5a;
+            color: #5a3a3a;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: #ffffff;
         }
-        
+
         table thead {
-            background-color: #2c3e50;
-            color: #fff;
+            background: linear-gradient(135deg, #1B2D42 0%, #132038 100%);
+            color: #ffffff;
         }
-        
+
         table th {
-            padding: 12px;
+            padding: 14px;
             text-align: left;
-            border: 1px solid #ddd;
-            font-weight: bold;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
-        
+
         table td {
-            padding: 10px 12px;
-            border: 1px solid #ddd;
+            padding: 12px 14px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+            color: #333;
         }
-        
+
+        table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
         table tbody tr:hover {
-            background-color: #f5f5f5;
+            background-color: #f5f6f8;
         }
-        
+
         table tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #fafbfc;
         }
-        
+
         .no-logs {
             text-align: center;
-            padding: 30px;
-            color: #666;
-            background-color: #fff;
+            padding: 40px;
+            color: #999;
+            background-color: #f5f6f8;
             margin-top: 20px;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-size: 15px;
         }
-        
+
         .log-details {
             font-size: 12px;
-            color: #555;
+            color: #666;
+            line-height: 1.4;
         }
     </style>
 </head>

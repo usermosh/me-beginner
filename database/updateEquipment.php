@@ -215,127 +215,195 @@ if ($stmt = mysqli_prepare($link, $sql)) {
     <title>Update Equipment - Technical Management System</title>
 
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1B2D42 0%, #0f1619 100%);
             min-height: 100vh;
-            font-family: Arial, Helvetica, sans-serif;
-            background: linear-gradient(135deg, #2c3e50, #4ca1af);
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
+
         .form-container {
             background: #ffffff;
             width: 100%;
             max-width: 600px;
-            padding: 35px;
-            border-radius: 8px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
+
         h2 {
             text-align: center;
-            color: #2c3e50;
-            margin-bottom: 10px;
+            color: #1B2D42;
+            margin-bottom: 8px;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
         }
-        p {
+
+        .form-container > p {
             text-align: center;
             font-size: 14px;
             color: #666;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            line-height: 1.5;
         }
+
         label {
-            font-size: 14px;
-            color: #333;
             display: block;
-            margin-bottom: 6px;
-            font-weight: bold;
+            font-size: 13px;
+            color: #1B2D42;
+            margin-bottom: 8px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
+
         input[type="text"],
         input[type="number"],
         select,
         textarea {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: #f5f6f8;
         }
+
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 100px;
         }
-        input:focus,
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
         select:focus,
         textarea:focus {
             outline: none;
-            border-color: #2980b9;
-            box-shadow: 0 0 5px rgba(41,128,185,0.4);
+            background-color: #ffffff;
+            border-color: #1B2D42;
+            box-shadow: 0 0 0 3px rgba(27, 45, 66, 0.1);
         }
+
         .status-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
+
         .radio-group {
             display: flex;
-            gap: 20px;
+            gap: 25px;
             flex-wrap: wrap;
+            margin-bottom: 20px;
         }
+
         .radio-group label {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
             margin-bottom: 0;
-            font-weight: normal;
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: normal;
+            font-size: 14px;
+            cursor: pointer;
         }
+
         .radio-group input[type="radio"] {
-            width: auto;
+            width: 18px;
+            height: 18px;
             margin: 0;
             padding: 0;
+            cursor: pointer;
+            accent-color: #1B2D42;
         }
+
         .actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 25px;
+            margin-top: 30px;
+            gap: 15px;
         }
+
         input[type="submit"] {
-            background: #2980b9;
-            color: #fff;
+            background: linear-gradient(135deg, #1B2D42 0%, #132038 100%);
+            color: #ffffff;
             border: none;
-            padding: 10px 30px;
-            border-radius: 4px;
+            padding: 12px 32px;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            flex: 1;
         }
+
         input[type="submit"]:hover {
-            background: #1f6391;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(27, 45, 66, 0.3);
         }
+
+        input[type="submit"]:active {
+            transform: translateY(0);
+        }
+
         .cancel {
+            flex: 1;
+            text-align: center;
+            padding: 12px 32px;
             font-size: 14px;
             text-decoration: none;
-            color: #555;
+            color: #1B2D42;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            display: inline-block;
         }
+
         .cancel:hover {
-            text-decoration: underline;
+            background-color: #f5f6f8;
+            border-color: #1B2D42;
         }
+
         .message {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
+            padding: 14px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            border-left: 4px solid;
         }
+
         .error {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background-color: #fff5f5;
+            border-left-color: #8b5a5a;
+            color: #5a3a3a;
         }
+
         .required {
-            color: red;
+            color: #8b5a5a;
         }
+
         .readonly-field {
-            background-color: #f5f5f5;
+            background-color: #f5f6f8 !important;
             color: #666;
+            cursor: not-allowed;
         }
     </style>
 </head>

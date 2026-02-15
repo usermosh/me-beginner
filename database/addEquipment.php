@@ -177,103 +177,136 @@ if (isset($_POST['btnsubmit'])) {
     <title>Add Equipment - Technical Management System</title>
 
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1B2D42 0%, #0f1619 100%);
             min-height: 100vh;
-            font-family: Arial, Helvetica, sans-serif;
-            background: linear-gradient(135deg, #2c3e50, #4ca1af);
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 30px 20px;
         }
+
         .form-container {
             background: #ffffff;
             width: 100%;
             max-width: 600px;
-            padding: 35px;
+            padding: 50px 40px;
             border-radius: 8px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
+
         h2 {
             text-align: center;
-            color: #2c3e50;
-            margin-bottom: 10px;
+            color: #1B2D42;
+            margin-bottom: 12px;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
         }
+
         p {
             text-align: center;
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 25px;
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 30px;
         }
+
         label {
-            font-size: 14px;
-            color: #333;
+            font-size: 13px;
+            color: #4a5568;
             display: block;
-            margin-bottom: 6px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+
         input[type="text"],
         input[type="number"],
         select,
         textarea {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
+            padding: 12px;
+            margin-bottom: 18px;
             border-radius: 4px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            border: 1px solid #d1d5db;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
+
         textarea {
             resize: vertical;
             min-height: 80px;
         }
+
         input:focus,
         select:focus,
         textarea:focus {
             outline: none;
-            border-color: #2980b9;
-            box-shadow: 0 0 5px rgba(41,128,185,0.4);
+            border-color: #1B2D42;
+            box-shadow: 0 0 0 3px rgba(27, 45, 66, 0.1);
         }
+
         .actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 25px;
+            margin-top: 30px;
         }
+
         input[type="submit"] {
-            background: #2980b9;
-            color: #fff;
+            background: #1B2D42;
+            color: #ffffff;
             border: none;
-            padding: 10px 30px;
+            padding: 12px 32px;
             border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: background 0.3s, transform 0.2s;
         }
+
         input[type="submit"]:hover {
-            background: #1f6391;
+            background: #0f1619;
+            transform: translateY(-1px);
         }
+
         .cancel {
-            font-size: 14px;
+            font-size: 13px;
             text-decoration: none;
-            color: #555;
+            color: #6b7280;
+            font-weight: 600;
+            transition: color 0.3s;
         }
+
         .cancel:hover {
-            text-decoration: underline;
+            color: #1B2D42;
         }
+
         .message {
-            padding: 10px;
-            margin-bottom: 15px;
+            padding: 14px;
+            margin-bottom: 25px;
             border-radius: 4px;
+            font-size: 13px;
         }
+
         .error {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background-color: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #7f1d1d;
         }
+
         .required {
-            color: red;
+            color: #7f1d1d;
+            font-weight: 600;
         }
     </style>
 </head>
