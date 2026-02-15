@@ -35,6 +35,140 @@ $equipmentTypes = [
     'Printer',
     'Projector'
 ];
+
+// Handle form submission
+if (isset($_POST['btnsubmit'])) {
+    $assetNumber = trim($_POST['txtAssetNumber']);
+    $serialNumber = trim($_POST['txtSerialNumber']);
+    $type = $_POST['cmbType'];
+    $manufacturer = trim($_POST['txtManufacturer']);
+    $yearModel = intval($_POST['txtYearModel']);
+    $description = trim($_POST['txtDescription']);
+    $branch = $_POST['cmbBranch'];
+    $department = $_POST['cmbDepartment'];
+    $createdBy = $_SESSION['username'];
+
+    // Validation
+    $errors = [];
+
+    if (empty($assetNumber)) {
+        $errors[] = "Asset Number is required.";
+    }
+    if (empty($serialNumber)) {
+        $errors[] = "Serial Number is required.";
+    }
+    if (empty($type)) {
+        $errors[] = "Type is required.";
+    }
+    if (empty($manufacturer)) {
+        $errors[] = "Manufacturer is required.";
+    }
+    if (empty($yearModel) || $yearModel < 1900 || $yearModel > 2100) {
+        $errors[] = "Year Model must be numeric and between 1900 and 2100.";
+    }
+    if (strlen($yearModel) != 4 && $yearModel > 0) {
+        $errors[] = "Year Model should contain exactly 4 numbers.";
+    }
+    if (empty($branch)) {
+        $errors[] = "Branch is required.";
+    }
+    if (empty($department)) {
+        $errors[] = "Department is required.";
+    }
+
+    if (!empty($errors)) {
+        $_SESSION['error'] = implode("<br>", $errors);
+        header("location: addEquipment.php");
+        exit;
+    }
+
+    // Check if Asset Number already exists
+    $sql = "SELECT id FROM tblequipment WHERE assetNumber = ?";
+    if ($stmt = mysqli_prepare($link, $sql)) {
+        mysqli_stmt_bind_param($stmt, "s", $assetNumber);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+
+        if (mysqli_num_rows($result) > 0) {
+            $_SESSION['error'] = "Asset Number already exists. Please use a different Asset Number.";
+            header("location: addEquipment.php");
+            exit;
+        }
+    }
+
+    // Check if Serial Number already exists
+    $sql = "SELECT id FROM tblequipment WHERE serialNumber = ?";
+    if ($stmt = mysqli_prepare($link, $sql)) {
+        mysqli_stmt_bind_param($stmt, "s", $serialNumber);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+
+        if (mysqli_num_rows($result) > 0) {
+            $_SESSION['error'] = "Serial Number already exists. Please use a different Serial Number.";
+            header("location: addEquipment.php");
+            exit;
+        }
+    }
+
+    // Insert equipment
+    $sql = "INSERT INTO tblequipment (assetNumber, serialNumber, type, manufacturer, yearModel, description, branch, department, status, createdby)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    if ($stmt = mysqli_prepare($link, $sql)) {
+        $status = "WORKING";
+        $yearModelInt = intval($yearModel);
+        mysqli_stmt_bind_param(
+            $stmt,
+            "ssssisssss",
+            $assetNumber,
+            $serialNumber,
+            $type,
+            $manufacturer,
+            $yearModelInt,
+            $description,
+            $branch,
+            $department,
+            $status,
+            $createdBy
+        );
+
+        if (mysqli_stmt_execute($stmt)) {
+            $equipmentId = mysqli_insert_id($link);
+            
+            // Insert log entry
+            $logSql = "INSERT INTO tblequipmentlogs(datelog, timelog, action, module, performedby, equipmentId, assetNumber)
+                       VALUES (?, ?, ?, ?, ?, ?, ?)";
+            
+            if ($logStmt = mysqli_prepare($link, $logSql)) {
+                $date = date("d/m/Y");
+                $time = date("h:i:sa");
+                $action = "Add equipment";
+                $module = "Equipment Management";
+                
+                mysqli_stmt_bind_param(
+                    $logStmt,
+                    "sssssss",
+                    $date,
+                    $time,
+                    $action,
+                    $module,
+                    $createdBy,
+                    $equipmentId,
+                    $assetNumber
+                );
+                mysqli_stmt_execute($logStmt);
+            }
+            
+            $_SESSION['success'] = "Equipment successfully added!";
+            header("location: equipmentManagement.php");
+            exit;
+        } else {
+            $_SESSION['error'] = "Error adding equipment: " . mysqli_error($link);
+            header("location: addEquipment.php");
+            exit;
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -206,114 +340,6 @@ $equipmentTypes = [
 
     </form>
 </div>
-
-<?php
-if (isset($_POST['btnsubmit'])) {
-    $assetNumber = trim($_POST['txtAssetNumber']);
-    $serialNumber = trim($_POST['txtSerialNumber']);
-    $type = $_POST['cmbType'];
-    $manufacturer = trim($_POST['txtManufacturer']);
-    $yearModel = intval($_POST['txtYearModel']);
-    $description = trim($_POST['txtDescription']);
-    $branch = $_POST['cmbBranch'];
-    $department = $_POST['cmbDepartment'];
-    $createdBy = $_SESSION['username'];
-
-    // Validation
-    $errors = [];
-
-    if (empty($assetNumber)) {
-        $errors[] = "Asset Number is required.";
-    }
-    if (empty($serialNumber)) {
-        $errors[] = "Serial Number is required.";
-    }
-    if (empty($type)) {
-        $errors[] = "Type is required.";
-    }
-    if (empty($manufacturer)) {
-        $errors[] = "Manufacturer is required.";
-    }
-    if (empty($yearModel) || $yearModel < 1900 || $yearModel > 2100) {
-        $errors[] = "Year Model must be numeric and between 1900 and 2100.";
-    }
-    if (strlen($yearModel) != 4 && $yearModel > 0) {
-        $errors[] = "Year Model should contain exactly 4 numbers.";
-    }
-    if (empty($branch)) {
-        $errors[] = "Branch is required.";
-    }
-    if (empty($department)) {
-        $errors[] = "Department is required.";
-    }
-
-    if (!empty($errors)) {
-        $_SESSION['error'] = implode("<br>", $errors);
-        header("location: addEquipment.php");
-        exit;
-    }
-
-    // Check if Asset Number already exists
-    $sql = "SELECT id FROM tblequipment WHERE assetNumber = ?";
-    if ($stmt = mysqli_prepare($link, $sql)) {
-        mysqli_stmt_bind_param($stmt, "s", $assetNumber);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-
-        if (mysqli_num_rows($result) > 0) {
-            $_SESSION['error'] = "Asset Number already exists. Please use a different Asset Number.";
-            header("location: addEquipment.php");
-            exit;
-        }
-    }
-
-    // Check if Serial Number already exists
-    $sql = "SELECT id FROM tblequipment WHERE serialNumber = ?";
-    if ($stmt = mysqli_prepare($link, $sql)) {
-        mysqli_stmt_bind_param($stmt, "s", $serialNumber);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-
-        if (mysqli_num_rows($result) > 0) {
-            $_SESSION['error'] = "Serial Number already exists. Please use a different Serial Number.";
-            header("location: addEquipment.php");
-            exit;
-        }
-    }
-
-    // Insert equipment
-    $sql = "INSERT INTO tblequipment (assetNumber, serialNumber, type, manufacturer, yearModel, description, branch, department, status, createdby)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-    if ($stmt = mysqli_prepare($link, $sql)) {
-        $status = "WORKING";
-        mysqli_stmt_bind_param(
-            $stmt,
-            "ssssississs",
-            $assetNumber,
-            $serialNumber,
-            $type,
-            $manufacturer,
-            $yearModel,
-            $description,
-            $branch,
-            $department,
-            $status,
-            $createdBy
-        );
-
-        if (mysqli_stmt_execute($stmt)) {
-            $_SESSION['success'] = "Equipment successfully added!";
-            header("location: equipmentManagement.php");
-            exit;
-        } else {
-            $_SESSION['error'] = "Error adding equipment: " . mysqli_error($link);
-            header("location: addEquipment.php");
-            exit;
-        }
-    }
-}
-?>
 
 </body>
 </html>

@@ -4,22 +4,24 @@ include "sessionChecker.php";
 
 // Define branch and department options
 $branches = [
-    'Head Office',
-    'Cebu Campus',
-    'Davao Campus',
-    'Manila Campus',
-    'Iloilo Campus'
+    'Juan Sumulong Campus (AU Legarda / Main)',
+    'Jose Abad Santos Campus (AU Pasay)',
+    'Andres Bonifacio Campus (AU Pasig)',
+    'Jose Rizal Campus (AU Malabon)',
+    'Apolinario Mabini Campus (AU Pasay)',
+    'Plaridel Campus (AU Mandaluyong)',
+    'Elisa Esguerra Campus (AU Malabon)',
+    'School of Law (A. Mabini Campus - AU Pasay)'
 ];
 
 $departments = [
-    'College of Engineering',
-    'College of Business',
-    'College of Liberal Arts',
-    'College of Science',
-    'Office of the Registrar',
-    'Office of Student Affairs',
-    'Information Technology Office',
-    'Library'
+    'College of Nursing',
+    'College of Medical Laboratory Science',
+    'College of Arts and Sciences',
+    'College of Hospitality and Tourism Management',
+    'College of Computer Science',
+    'College of Criminal Justice Education',
+    'College of Accountancy',
 ];
 
 $equipmentTypes = [
@@ -35,7 +37,151 @@ $equipmentTypes = [
 
 $statuses = ['WORKING', 'ON-REPAIR', 'RETIRED'];
 
-// Get equipment ID from URL
+// Handle form submission first
+if (isset($_POST['btnsubmit'])) {
+    $equipmentId = intval($_POST['equipmentId']);
+    
+    if ($equipmentId == 0) {
+        $_SESSION['error'] = "Invalid equipment ID.";
+        header("location: equipmentManagement.php");
+        exit;
+    }
+    
+    $serialNumber = trim($_POST['txtSerialNumber']);
+    $type = $_POST['cmbType'];
+    $manufacturer = trim($_POST['txtManufacturer']);
+    $yearModel = intval($_POST['txtYearModel']);
+    $description = trim($_POST['txtDescription']);
+    $branch = $_POST['cmbBranch'];
+    $department = $_POST['cmbDepartment'];
+    $status = $_POST['rdoStatus'];
+    $updatedBy = $_SESSION['username'];
+
+    // Validation
+    $errors = [];
+
+    if (empty($serialNumber)) {
+        $errors[] = "Serial Number is required.";
+    }
+    if (empty($type)) {
+        $errors[] = "Type is required.";
+    }
+    if (empty($manufacturer)) {
+        $errors[] = "Manufacturer is required.";
+    }
+    if (empty($yearModel) || $yearModel < 1900 || $yearModel > 2100) {
+        $errors[] = "Year Model must be numeric and between 1900 and 2100.";
+    }
+    if (strlen($yearModel) != 4 && $yearModel > 0) {
+        $errors[] = "Year Model should contain exactly 4 numbers.";
+    }
+    if (empty($branch)) {
+        $errors[] = "Branch is required.";
+    }
+    if (empty($department)) {
+        $errors[] = "Department is required.";
+    }
+    if (empty($status)) {
+        $errors[] = "Status is required.";
+    }
+
+    if (!empty($errors)) {
+        $_SESSION['error'] = implode("<br>", $errors);
+        header("location: updateEquipment.php?id=" . $equipmentId);
+        exit;
+    }
+
+    // Check if Serial Number is unique (excluding current equipment)
+    $sql = "SELECT id FROM tblequipment WHERE serialNumber = ? AND id != ?";
+    if ($stmt = mysqli_prepare($link, $sql)) {
+        mysqli_stmt_bind_param($stmt, "si", $serialNumber, $equipmentId);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+
+        if (mysqli_num_rows($result) > 0) {
+            $_SESSION['error'] = "Serial Number already exists. Please use a different Serial Number.";
+            header("location: updateEquipment.php?id=" . $equipmentId);
+            exit;
+        }
+    }
+
+    // Get old values for logging
+    $sql = "SELECT * FROM tblequipment WHERE id = ?";
+    $oldEquipment = null;
+    if ($stmt = mysqli_prepare($link, $sql)) {
+        mysqli_stmt_bind_param($stmt, "i", $equipmentId);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $oldEquipment = mysqli_fetch_assoc($result);
+    }
+
+    // Update equipment
+    $sql = "UPDATE tblequipment SET serialNumber = ?, type = ?, manufacturer = ?, yearModel = ?, description = ?, branch = ?, department = ?, status = ?
+            WHERE id = ?";
+
+    if ($stmt = mysqli_prepare($link, $sql)) {
+        mysqli_stmt_bind_param(
+            $stmt,
+            "ssssisssi",
+            $serialNumber,
+            $type,
+            $manufacturer,
+            $yearModel,
+            $description,
+            $branch,
+            $department,
+            $status,
+            $equipmentId
+        );
+
+        if (mysqli_stmt_execute($stmt)) {
+            // Log the update
+            $changeDetails = "";
+            if ($oldEquipment['type'] != $type) $changeDetails .= "Type: {$oldEquipment['type']} → $type; ";
+            if ($oldEquipment['status'] != $status) $changeDetails .= "Status: {$oldEquipment['status']} → $status; ";
+            if ($oldEquipment['serialNumber'] != $serialNumber) $changeDetails .= "Serial Number changed; ";
+            if ($oldEquipment['manufacturer'] != $manufacturer) $changeDetails .= "Manufacturer: {$oldEquipment['manufacturer']} → $manufacturer; ";
+            if ($oldEquipment['yearModel'] != $yearModel) $changeDetails .= "Year Model: {$oldEquipment['yearModel']} → $yearModel; ";
+            if ($oldEquipment['branch'] != $branch) $changeDetails .= "Branch: {$oldEquipment['branch']} → $branch; ";
+            if ($oldEquipment['department'] != $department) $changeDetails .= "Department: {$oldEquipment['department']} → $department; ";
+
+            $sql = "INSERT INTO tblequipmentlogs(datelog, timelog, action, module, performedby, equipmentId, assetNumber, details)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+            if ($stmt = mysqli_prepare($link, $sql)) {
+                $date = date("d/m/Y");
+                $time = date("h:i:sa");
+                $action = "Update equipment";
+                $module = "Equipment Management";
+                $assetNumber = $oldEquipment['assetNumber'];
+
+                mysqli_stmt_bind_param(
+                    $stmt,
+                    "sssssiss",
+                    $date,
+                    $time,
+                    $action,
+                    $module,
+                    $updatedBy,
+                    $equipmentId,
+                    $assetNumber,
+                    $changeDetails
+                );
+                mysqli_stmt_execute($stmt);
+            }
+
+            $_SESSION['success'] = "Equipment successfully updated!";
+            header("location: equipmentManagement.php");
+            exit;
+        } else {
+            $_SESSION['error'] = "Error updating equipment: " . mysqli_error($link);
+            header("location: updateEquipment.php?id=" . $equipmentId);
+            exit;
+        }
+    }
+}
+
+
 $equipmentId = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($equipmentId == 0) {
@@ -275,144 +421,6 @@ if ($stmt = mysqli_prepare($link, $sql)) {
 
     </form>
 </div>
-
-<?php
-if (isset($_POST['btnsubmit'])) {
-    $equipmentId = intval($_POST['equipmentId']);
-    $serialNumber = trim($_POST['txtSerialNumber']);
-    $type = $_POST['cmbType'];
-    $manufacturer = trim($_POST['txtManufacturer']);
-    $yearModel = intval($_POST['txtYearModel']);
-    $description = trim($_POST['txtDescription']);
-    $branch = $_POST['cmbBranch'];
-    $department = $_POST['cmbDepartment'];
-    $status = $_POST['rdoStatus'];
-    $updatedBy = $_SESSION['username'];
-
-    // Validation
-    $errors = [];
-
-    if (empty($serialNumber)) {
-        $errors[] = "Serial Number is required.";
-    }
-    if (empty($type)) {
-        $errors[] = "Type is required.";
-    }
-    if (empty($manufacturer)) {
-        $errors[] = "Manufacturer is required.";
-    }
-    if (empty($yearModel) || $yearModel < 1900 || $yearModel > 2100) {
-        $errors[] = "Year Model must be numeric and between 1900 and 2100.";
-    }
-    if (strlen($yearModel) != 4 && $yearModel > 0) {
-        $errors[] = "Year Model should contain exactly 4 numbers.";
-    }
-    if (empty($branch)) {
-        $errors[] = "Branch is required.";
-    }
-    if (empty($department)) {
-        $errors[] = "Department is required.";
-    }
-    if (empty($status)) {
-        $errors[] = "Status is required.";
-    }
-
-    if (!empty($errors)) {
-        $_SESSION['error'] = implode("<br>", $errors);
-        header("location: updateEquipment.php?id=" . $equipmentId);
-        exit;
-    }
-
-    // Check if Serial Number is unique (excluding current equipment)
-    $sql = "SELECT id FROM tblequipment WHERE serialNumber = ? AND id != ?";
-    if ($stmt = mysqli_prepare($link, $sql)) {
-        mysqli_stmt_bind_param($stmt, "si", $serialNumber, $equipmentId);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-
-        if (mysqli_num_rows($result) > 0) {
-            $_SESSION['error'] = "Serial Number already exists. Please use a different Serial Number.";
-            header("location: updateEquipment.php?id=" . $equipmentId);
-            exit;
-        }
-    }
-
-    // Get old values for logging
-    $sql = "SELECT * FROM tblequipment WHERE id = ?";
-    $oldEquipment = null;
-    if ($stmt = mysqli_prepare($link, $sql)) {
-        mysqli_stmt_bind_param($stmt, "i", $equipmentId);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-        $oldEquipment = mysqli_fetch_assoc($result);
-    }
-
-    // Update equipment
-    $sql = "UPDATE tblequipment SET serialNumber = ?, type = ?, manufacturer = ?, yearModel = ?, description = ?, branch = ?, department = ?, status = ?
-            WHERE id = ?";
-
-    if ($stmt = mysqli_prepare($link, $sql)) {
-        mysqli_stmt_bind_param(
-            $stmt,
-            "ssssissi",
-            $serialNumber,
-            $type,
-            $manufacturer,
-            $yearModel,
-            $description,
-            $branch,
-            $department,
-            $status,
-            $equipmentId
-        );
-
-        if (mysqli_stmt_execute($stmt)) {
-            // Log the update
-            $changeDetails = "";
-            if ($oldEquipment['type'] != $type) $changeDetails .= "Type: {$oldEquipment['type']} → $type; ";
-            if ($oldEquipment['status'] != $status) $changeDetails .= "Status: {$oldEquipment['status']} → $status; ";
-            if ($oldEquipment['serialNumber'] != $serialNumber) $changeDetails .= "Serial Number changed; ";
-            if ($oldEquipment['manufacturer'] != $manufacturer) $changeDetails .= "Manufacturer: {$oldEquipment['manufacturer']} → $manufacturer; ";
-            if ($oldEquipment['yearModel'] != $yearModel) $changeDetails .= "Year Model: {$oldEquipment['yearModel']} → $yearModel; ";
-            if ($oldEquipment['branch'] != $branch) $changeDetails .= "Branch: {$oldEquipment['branch']} → $branch; ";
-            if ($oldEquipment['department'] != $department) $changeDetails .= "Department: {$oldEquipment['department']} → $department; ";
-
-            $sql = "INSERT INTO tblequipmentlogs(datelog, timelog, action, module, performedby, equipmentId, assetNumber, changeDetails)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-            if ($stmt = mysqli_prepare($link, $sql)) {
-                $date = date("d/m/Y");
-                $time = date("h:i:sa");
-                $action = "Update equipment";
-                $module = "Equipment Management";
-                $assetNumber = $oldEquipment['assetNumber'];
-
-                mysqli_stmt_bind_param(
-                    $stmt,
-                    "ssssssss",
-                    $date,
-                    $time,
-                    $action,
-                    $module,
-                    $updatedBy,
-                    $equipmentId,
-                    $assetNumber,
-                    $changeDetails
-                );
-                mysqli_stmt_execute($stmt);
-            }
-
-            $_SESSION['success'] = "Equipment successfully updated!";
-            header("location: equipmentManagement.php");
-            exit;
-        } else {
-            $_SESSION['error'] = "Error updating equipment: " . mysqli_error($link);
-            header("location: updateEquipment.php?id=" . $equipmentId);
-            exit;
-        }
-    }
-}
-?>
 
 </body>
 </html>
