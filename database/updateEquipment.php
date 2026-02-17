@@ -1,4 +1,5 @@
 <?php
+
 require_once "config.php";
 include "sessionChecker.php";
 
@@ -215,127 +216,267 @@ if ($stmt = mysqli_prepare($link, $sql)) {
     <title>Update Equipment - Technical Management System</title>
 
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             min-height: 100vh;
-            font-family: Arial, Helvetica, sans-serif;
-            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1d3d 0%, #1a2e5e 50%, #0d1a33 100%);
+            background-attachment: fixed;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 30px 20px;
         }
+
+        body::before {
+            content: '';
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: rgba(100, 150, 255, 0.08);
+            border-radius: 50%;
+            top: -100px;
+            left: -100px;
+            animation: float1 8s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: rgba(80, 120, 255, 0.06);
+            border-radius: 50%;
+            bottom: -150px;
+            right: -150px;
+            animation: float2 10s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            50% { transform: translateY(50px) translateX(30px); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            50% { transform: translateY(-50px) translateX(-30px); }
+        }
+
         .form-container {
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             width: 100%;
-            max-width: 600px;
-            padding: 35px;
-            border-radius: 8px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+            max-width: 650px;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 1;
+            animation: slideIn 0.6s ease-out;
         }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         h2 {
             text-align: center;
-            color: #2c3e50;
+            background: linear-gradient(135deg, #1a3a7e, #2a5298);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 700;
         }
+
         p {
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
             color: #666;
             margin-bottom: 25px;
+            font-weight: 500;
         }
+
         label {
-            font-size: 14px;
+            font-size: 13px;
             color: #333;
             display: block;
-            margin-bottom: 6px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+
         input[type="text"],
         input[type="number"],
         select,
         textarea {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: #fafafa;
         }
+
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 100px;
         }
-        input:focus,
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
         select:focus,
         textarea:focus {
             outline: none;
-            border-color: #2980b9;
-            box-shadow: 0 0 5px rgba(41,128,185,0.4);
+            border-color: #2a5298;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+            transform: translateY(-2px);
         }
+
         .status-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(53, 122, 189, 0.1));
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(42, 82, 152, 0.2);
         }
+
         .radio-group {
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
+            margin-top: 12px;
         }
+
         .radio-group label {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
             margin-bottom: 0;
-            font-weight: normal;
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: normal;
         }
+
         .radio-group input[type="radio"] {
-            width: auto;
+            width: 18px;
+            height: 18px;
             margin: 0;
             padding: 0;
+            cursor: pointer;
+            accent-color: #2a5298;
         }
+
         .actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 25px;
+            margin-top: 30px;
+            gap: 15px;
         }
+
         input[type="submit"] {
-            background: #2980b9;
+            background: linear-gradient(135deg, #4a90e2, #357abd);
             color: #fff;
             border: none;
-            padding: 10px 30px;
-            border-radius: 4px;
+            padding: 14px 30px;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(42, 82, 152, 0.3);
+            text-transform: uppercase;
         }
+
         input[type="submit"]:hover {
-            background: #1f6391;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(42, 82, 152, 0.5);
+            background: linear-gradient(135deg, #5a9ef0, #4585c7);
         }
+
+        input[type="submit"]:active {
+            transform: translateY(-1px);
+        }
+
         .cancel {
             font-size: 14px;
             text-decoration: none;
-            color: #555;
+            color: #2a5298;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            padding: 8px 16px;
         }
+
         .cancel:hover {
+            color: #1a3a7e;
             text-decoration: underline;
         }
+
         .message {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            border-left: 4px solid;
+            animation: slideDown 0.4s ease-out;
         }
+
         .error {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
+            background: linear-gradient(135deg, #f8d7da, #f5c2c7);
+            border-color: #e74c3c;
             color: #721c24;
         }
-        .required {
-            color: red;
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
+        .required {
+            color: #e74c3c;
+            font-weight: 700;
+        }
+
         .readonly-field {
-            background-color: #f5f5f5;
+            background-color: linear-gradient(135deg, #f0f8ff, #ffffff);
             color: #666;
+            border-color: #ddd;
+            cursor: not-allowed;
+        }
+
+        .readonly-field:focus {
+            box-shadow: none;
+            transform: none;
         }
     </style>
 </head>

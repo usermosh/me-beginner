@@ -9,19 +9,17 @@ if(isset($_POST['btnsubmit'])) { // delete
         if(mysqli_stmt_execute($stmt)) {
             $sql = "INSERT INTO tbllogs(datelog, timelog, action, module, performedby, performedto)
                     VALUES (?, ?, ?, ?, ?, ?)";
-            if($stmt = mysqli_prepare($link, $sql)) {
+            if($logStmt = mysqli_prepare($link, $sql)) {
                 $date = date("d/m/Y");
                 $time = date("h:i:sa");
                 $action = "Delete account";
                 $module = "Accounts Management";
-                mysqli_stmt_bind_param($stmt, "ssssss", $date, $time, $action, $module, $_SESSION['username'], $_POST['txtusername']);
-                if(mysqli_stmt_execute($stmt)) {
-                    header("location: accountManagement.php");
-                    exit();
-                } else {
-                    echo "<font color='red'>ERROR on inserting of logs.</font>";
-                }
+                mysqli_stmt_bind_param($logStmt, "ssssss", $date, $time, $action, $module, $_SESSION['username'], $_POST['txtusername']);
+                @mysqli_stmt_execute($logStmt);
+                mysqli_stmt_close($logStmt);
             }
+            header("location: accountManagement.php");
+            exit();
         } else {
             echo "<font color='red'>ERROR on deleting account.</font>";
         }

@@ -58,25 +58,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
         mysqli_stmt_close($stmtGet);
     }
     
+    // Log the deletion BEFORE deleting (to satisfy FK constraint)
+    if ($ticketDetails) {
+        $action = 'deleted';
+        $dateNow = date('m/d/Y g:i A');
+        $details = 'Problem: ' . $ticketDetails['problem'] . ', Details: ' . $ticketDetails['details'];
+        $logSql = "INSERT INTO tblticketlogs (ticketNumber, action, performedBy, datePerformed, details) 
+                  VALUES (?, ?, ?, ?, ?)";
+        
+        if ($logStmt = mysqli_prepare($link, $logSql)) {
+            mysqli_stmt_bind_param($logStmt, "sssss", $ticketToDelete, $action, $_SESSION['username'], $dateNow, $details);
+            @mysqli_stmt_execute($logStmt);
+            mysqli_stmt_close($logStmt);
+        }
+    }
+    
+    // Delete all logs related to this ticket
+    $sqlDeleteLogs = "DELETE FROM tblticketlogs WHERE ticketNumber = ?";
+    if ($stmtLogs = mysqli_prepare($link, $sqlDeleteLogs)) {
+        mysqli_stmt_bind_param($stmtLogs, "s", $ticketToDelete);
+        @mysqli_stmt_execute($stmtLogs);
+        mysqli_stmt_close($stmtLogs);
+    }
+    
     // Delete ticket
     $sqlDelete = "DELETE FROM tbltickets WHERE ticketNumber = ?";
     if ($stmtDelete = mysqli_prepare($link, $sqlDelete)) {
         mysqli_stmt_bind_param($stmtDelete, "s", $ticketToDelete);
         
         if (mysqli_stmt_execute($stmtDelete)) {
-            // Log the deletion
-            $action = 'deleted';
-            $dateNow = date('m/d/Y g:i A');
-            $details = 'Problem: ' . $ticketDetails['problem'] . ', Details: ' . $ticketDetails['details'];
-            $logSql = "INSERT INTO tblticketlogs (ticketNumber, action, performedBy, datePerformed, details) 
-                      VALUES (?, ?, ?, ?, ?)";
-            
-            if ($logStmt = mysqli_prepare($link, $logSql)) {
-                mysqli_stmt_bind_param($logStmt, "sssss", $ticketToDelete, $action, $_SESSION['username'], $dateNow, $details);
-                mysqli_stmt_execute($logStmt);
-                mysqli_stmt_close($logStmt);
-            }
-            
             $_SESSION['success'] = "Ticket deleted successfully!";
         } else {
             $_SESSION['error'] = "Error deleting ticket!";
