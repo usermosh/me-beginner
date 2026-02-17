@@ -30,47 +30,82 @@ if(isset($_POST['btnsubmit'])) { // delete
 <head>
     <title>Delete Account - Technical Management System</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Times New Roman', Times, serif;
-            background-color: #bbd8f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1B2D42 0%, #0f1619 100%);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            padding: 20px;
         }
+
         .confirm-box {
-            background: #f5f5f5;
-            border: 1px solid #000;
-            padding: 25px;
-            width: 350px;
+            background: #ffffff;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
             text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
+
         .confirm-box p {
             font-size: 16px;
-            margin-bottom: 20px;
+            color: #1B2D42;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            font-weight: 500;
         }
+
         input[type="submit"] {
-            padding: 6px 15px;
-            font-weight: bold;
-            border: 1px solid #000;
-            border-radius: 10px;
+            background: linear-gradient(135deg, #8b5a5a 0%, #6b4444 100%);
+            color: #ffffff;
+            padding: 12px 28px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            margin-right: 10px;
         }
+
         input[type="submit"]:hover {
-            background: #6dadee;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 90, 90, 0.3);
         }
+
+        input[type="submit"]:active {
+            transform: translateY(0);
+        }
+
         .cancel-link {
-            margin-left: 15px;
             text-decoration: none;
-            font-weight: bold;
-            color: #000;
-            border: 1px solid #000;
-            border-radius: 10px;
-            padding: 6px 15px;
-            background: #ddd;
+            font-weight: 600;
+            color: #1B2D42;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 10px 24px;
+            background: #ffffff;
+            transition: all 0.3s ease;
+            display: inline-block;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
+
         .cancel-link:hover {
-            background: #ff0000;
+            background-color: #f5f6f8;
+            border-color: #1B2D42;
         }
     </style>
 </head>

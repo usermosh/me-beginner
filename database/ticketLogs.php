@@ -52,21 +52,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnClearLogs'])) {
 <head>
     <title>Ticket Logs - User</title>
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1B2D42 0%, #0f1619 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 30px 20px;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
         .header {
@@ -74,58 +79,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnClearLogs'])) {
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
-            border-bottom: 2px solid #2c3e50;
             padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
         }
 
         .header h1 {
-            color: #2c3e50;
+            color: #1B2D42;
             margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
         }
 
         .back-link {
-            background: #95a5a6;
-            color: white;
-            padding: 10px 20px;
+            background: linear-gradient(135deg, #1B2D42 0%, #132038 100%);
+            color: #ffffff;
+            padding: 10px 22px;
             text-decoration: none;
-            border-radius: 4px;
-            transition: background 0.3s;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
 
         .back-link:hover {
-            background: #7f8c8d;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(27, 45, 66, 0.3);
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 10px 22px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
+            font-size: 13px;
+            transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
 
         .btn-danger {
-            background: #e74c3c;
-            color: white;
+            background: linear-gradient(135deg, #8b5a5a 0%, #6b4444 100%);
+            color: #ffffff;
         }
 
         .btn-danger:hover {
-            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(139, 90, 90, 0.3);
         }
 
         .message {
-            padding: 15px;
-            border-radius: 4px;
+            padding: 14px;
+            border-radius: 6px;
             margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid;
         }
 
         .success {
-            background: #c8f7c5;
-            border: 1px solid #4caf50;
-            color: #2d662d;
+            background-color: #f0fdf4;
+            border-left-color: #5a8b5a;
+            color: #3a5a3a;
         }
 
         .table-responsive {
@@ -139,48 +158,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnClearLogs'])) {
         }
 
         th, td {
-            padding: 12px;
+            padding: 13px 14px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
         }
 
         th {
-            background: #34495e;
-            color: white;
-            font-weight: bold;
+            background: linear-gradient(135deg, #1B2D42 0%, #132038 100%);
+            color: #ffffff;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        td {
+            color: #333;
         }
 
         tr:hover {
-            background: #f5f5f5;
+            background-color: #f5f6f8;
         }
 
         .badge {
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            display: inline-block;
         }
 
         .badge-created {
-            background: #27ae60;
-            color: white;
+            background: #f0fdf4;
+            color: #3a5a3a;
+            border: 1px solid #5a8b5a;
         }
 
         .badge-updated {
-            background: #f39c12;
-            color: white;
+            background: #fffbf0;
+            color: #654321;
+            border: 1px solid #cc8f4a;
         }
 
         .badge-deleted {
-            background: #e74c3c;
-            color: white;
+            background: #fff5f5;
+            color: #5a3a3a;
+            border: 1px solid #8b5a5a;
         }
 
         .no-logs {
             text-align: center;
-            color: #7f8c8d;
-            padding: 40px;
-            font-size: 18px;
+            color: #999;
+            padding: 50px 20px;
+            font-size: 16px;
         }
 
         .modal {
@@ -190,10 +222,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnClearLogs'])) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
 
         .modal.active {
@@ -201,13 +234,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnClearLogs'])) {
         }
 
         .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
+            width: 100%;
+            max-height: 85vh;
             overflow-y: auto;
         }
 
@@ -215,49 +248,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnClearLogs'])) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #2c3e50;
-            padding-bottom: 10px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
         }
 
         .modal-header h2 {
             margin: 0;
-            color: #2c3e50;
+            color: #1B2D42;
+            font-size: 22px;
+            font-weight: 600;
         }
 
         .close-modal {
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
-            color: #2c3e50;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #1B2D42;
         }
 
         .detail-row {
             margin-bottom: 15px;
-            padding: 10px;
-            background: #ecf0f1;
-            border-radius: 4px;
+            padding: 12px;
+            background: #f5f6f8;
+            border-radius: 6px;
+            border-left: 3px solid #e5e7eb;
         }
 
         .detail-label {
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
+            font-weight: 600;
+            color: #1B2D42;
+            margin-bottom: 6px;
+            font-size: 12px;
+            letter-spacing: 0.2px;
+            text-transform: uppercase;
         }
 
         .detail-value {
             color: #555;
             word-wrap: break-word;
             white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.5;
         }
 
         .info {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
+            background: #f0fdf4;
+            border-left: 4px solid #5a8b5a;
+            color: #3a5a3a;
             padding: 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             margin-bottom: 20px;
             font-size: 13px;
         }
