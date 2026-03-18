@@ -3,8 +3,8 @@ require_once "sessionChecker.php";
 require_once "config.php";
 
 // ================= DELETE LOGIC =================
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipmentToDelete'])) {
-    $equipmentId = intval($_POST['equipmentToDelete']);
+if (isset($_GET['deleteEquipment'])) {
+    $equipmentId = intval($_GET['deleteEquipment']);
     
     // Get equipment details before deletion for logging
     $sql = "SELECT assetNumber FROM tblequipment WHERE id = ?";
@@ -14,15 +14,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipmentToDelete']))
         $result = mysqli_stmt_get_result($stmt);
         $equipment = mysqli_fetch_assoc($result);
         $assetNumber = $equipment['assetNumber'] ?? 'Unknown';
-        mysqli_stmt_close($stmt);
-    }
-    
-    // Delete all logs related to this equipment first
-    $sqlDeleteLogs = "DELETE FROM tblequipmentlogs WHERE equipmentId = ?";
-    if ($stmtLogs = mysqli_prepare($link, $sqlDeleteLogs)) {
-        mysqli_stmt_bind_param($stmtLogs, "i", $equipmentId);
-        @mysqli_stmt_execute($stmtLogs);
-        mysqli_stmt_close($stmtLogs);
     }
     
     // Delete the equipment
@@ -31,30 +22,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipmentToDelete']))
         mysqli_stmt_bind_param($stmt, "i", $equipmentId);
 
         if (mysqli_stmt_execute($stmt)) {
-            // Insert deletion log (set equipmentId to NULL since equipment is deleted)
+            // Insert logs
             $sql = "INSERT INTO tblequipmentlogs(datelog, timelog, action, module, performedby, equipmentId, assetNumber)
                     VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-            if ($logStmt = mysqli_prepare($link, $sql)) {
+            if ($stmt = mysqli_prepare($link, $sql)) {
                 $date = date("d/m/Y");
                 $time = date("h:i:sa");
                 $action = "Delete equipment";
                 $module = "Equipment Management";
-                $nullValue = NULL;
 
                 mysqli_stmt_bind_param(
-                    $logStmt,
+                    $stmt,
                     "sssssss",
                     $date,
                     $time,
                     $action,
                     $module,
                     $_SESSION['username'],
-                    $nullValue,
+                    $equipmentId,
                     $assetNumber
                 );
-                @mysqli_stmt_execute($logStmt);
-                mysqli_stmt_close($logStmt);
+                mysqli_stmt_execute($stmt);
             }
 
             $_SESSION['success'] = "Equipment successfully deleted!";
@@ -63,7 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipmentToDelete']))
         } else {
             $_SESSION['error'] = "Error deleting equipment: " . mysqli_error($link);
         }
-        mysqli_stmt_close($stmt);
     }
 }
 ?>
@@ -706,7 +694,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipmentToDelete']))
                 echo "<td>";
                 echo "<div class='action-buttons'>";
                 echo "<a href='updateEquipment.php?id=" . $row['id'] . "' class='btn-update'>✏️ Edit</a>";
-                echo "<button class='btn-delete' onclick=\"confirmDeleteEquipment(" . $row['id'] . ")\">🗑️ Delete</button>";
+                echo "<a href='equipmentManagement.php?deleteEquipment=" . $row['id'] . "' class='btn-delete' onclick='return confirm(\"Are you sure you want to delete this equipment?\");'>🗑️ Delete</a>";
                 echo "</div>";
                 echo "</td>";
                 echo "</tr>";
@@ -736,24 +724,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipmentToDelete']))
         ?>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteEquipmentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
-        <div style="background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); padding: 40px; border-radius: 15px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); max-width: 600px; width: 90%; border: 1px solid rgba(255, 255, 255, 0.3);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #1a3a7e; padding-bottom: 15px;">
-                <h2 style="margin: 0; color: #1a3a7e;">Confirm Delete</h2>
-                <button onclick="closeDeleteModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #1a3a7e; transition: all 0.3s ease;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='#1a3a7e'">×</button>
-            </div>
-            <p style="margin-bottom: 20px; color: #34495e;">Are you sure you want to delete this equipment? This action cannot be undone.</p>
-            <div style="margin-top: 20px; text-align: right;">
-                <form method="POST" style="display: inline;">
-                    <input type="hidden" name="equipmentToDelete" id="equipmentToDeleteInput">
-                    <button type="submit" style="padding: 12px 24px; background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-right: 10px; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(231, 76, 60, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">Delete</button>
-                    <button type="button" onclick="closeDeleteModal()" style="padding: 12px 24px; background: linear-gradient(135deg, #4a90e2, #357abd); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(42, 82, 152, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">Cancel</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <script>
     // Auto-hide messages after 5 seconds
     setTimeout(() => {
@@ -773,23 +743,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['equipmentToDelete']))
     const style = document.createElement('style');
     style.textContent = slideUpKeyframes;
     document.head.appendChild(style);
-
-    function confirmDeleteEquipment(equipmentId) {
-        document.getElementById('equipmentToDeleteInput').value = equipmentId;
-        document.getElementById('deleteEquipmentModal').style.display = 'flex';
-    }
-
-    function closeDeleteModal() {
-        document.getElementById('deleteEquipmentModal').style.display = 'none';
-    }
-
-    // Close modal when clicking outside of it
-    window.onclick = function(event) {
-        const modal = document.getElementById('deleteEquipmentModal');
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    }
     </script>
 </body>
 </html>

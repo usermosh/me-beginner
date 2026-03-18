@@ -150,6 +150,38 @@ if (isset($_POST['btnsubmit'])) {
             overflow: hidden;
         }
 
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+            text-decoration: none;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .back-button svg {
+            width: 20px;
+            height: 20px;
+            stroke: white;
+            stroke-width: 2.5;
+            fill: none;
+        }
+
         .form-header::before {
             content: '';
             position: absolute;
@@ -363,6 +395,11 @@ if (isset($_POST['btnsubmit'])) {
 
         <!-- Header -->
         <div class="form-header">
+            <a href="index.php" class="back-button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
             <div class="header-icon">
                 <svg viewBox="0 0 24 24">
                     <rect x="2" y="3" width="20" height="14" rx="2" stroke-linecap="round" stroke-linejoin="round"/>

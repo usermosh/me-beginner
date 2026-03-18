@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
             }
 
             $_SESSION['success'] = "Ticket created successfully! Ticket Number: " . $ticketNumber;
-            header("location: accountManagement.php?tab=tickets");
+            header("location: ticketManagement.php?tab=tickets");
             exit;
         } else {
             $_SESSION['error'] = "Error creating ticket!";
@@ -140,6 +140,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
             font-size: 14px;
             position: relative; z-index: 1;
         }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+            text-decoration: none;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+.back-button svg {
+    width: 20px;
+    height: 20px;
+    stroke: white;
+    stroke-width: 2.5;
+    fill: none;
+}
 
         /* ── Body ── */
         .form-body { padding: 40px; }
@@ -340,6 +372,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
 
         <!-- Header -->
         <div class="form-header">
+            <a href="index.php" class="back-button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
             <div class="header-icon">
                 <svg viewBox="0 0 24 24">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-linecap="round" stroke-linejoin="round"/>
@@ -448,7 +485,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
                         Submit Ticket
                     </button>
                     <!-- FIX: plain anchor tag — works regardless of form validation -->
-                    <a href="accountManagement.php?tab=tickets" class="btn btn-cancel">
+                    <a href="ticketManagement.php?tab=tickets" class="btn btn-cancel">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>

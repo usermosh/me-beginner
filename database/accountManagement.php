@@ -3,103 +3,44 @@
 require_once "sessionChecker.php";
 require_once "config.php";
 
-// Determine which tab to display
-$activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'accounts';
-
 // ================= ACCOUNTS DELETE LOGIC =================
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accountToDelete'])) {
-    $accountToDelete = $_POST['accountToDelete'];
-    
+if (isset($_GET['delete'])) {
+
     $sql = "DELETE FROM tblaccounts WHERE username = ?";
 
     if ($stmt = mysqli_prepare($link, $sql)) {
-        mysqli_stmt_bind_param($stmt, "s", $accountToDelete);
+        mysqli_stmt_bind_param($stmt, "s", $_GET['delete']);
 
         if (mysqli_stmt_execute($stmt)) {
 
-            // insert logs (non-blocking - continue even if logging fails)
+            // insert logs
             $sql = "INSERT INTO tbllogs(datelog, timelog, action, module, performedby, performedto)
                     VALUES (?, ?, ?, ?, ?, ?)";
 
-            if ($logStmt = mysqli_prepare($link, $sql)) {
+            if ($stmt = mysqli_prepare($link, $sql)) {
                 $date = date("d/m/Y");
                 $time = date("h:i:sa");
                 $action = "Delete account";
                 $module = "Accounts Management";
 
                 mysqli_stmt_bind_param(
-                    $logStmt,
+                    $stmt,
                     "ssssss",
                     $date,
                     $time,
                     $action,
                     $module,
                     $_SESSION['username'],
-                    $accountToDelete
+                    $_GET['delete']
                 );
-                @mysqli_stmt_execute($logStmt);
-                mysqli_stmt_close($logStmt);
+                mysqli_stmt_execute($stmt);
             }
 
             $_SESSION['success'] = "Account successfully deleted!";
-            header("location: accountManagement.php?tab=accounts");
+            header("location: accountManagement.php");
             exit;
         }
     }
-}
-
-// ================= TICKET DELETE LOGIC =================
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
-    $ticketToDelete = $_POST['ticketToDelete'];
-    
-    // Get current ticket details for log
-    $sqlGet = "SELECT * FROM tbltickets WHERE ticketNumber = ?";
-    if ($stmtGet = mysqli_prepare($link, $sqlGet)) {
-        mysqli_stmt_bind_param($stmtGet, "s", $ticketToDelete);
-        mysqli_stmt_execute($stmtGet);
-        $resultGet = mysqli_stmt_get_result($stmtGet);
-        $ticketDetails = mysqli_fetch_array($resultGet, MYSQLI_ASSOC);
-        mysqli_stmt_close($stmtGet);
-    }
-    
-    // Log the deletion BEFORE deleting (to satisfy FK constraint)
-    if ($ticketDetails) {
-        $action = 'deleted';
-        $dateNow = date('m/d/Y g:i A');
-        $details = 'Problem: ' . $ticketDetails['problem'] . ', Details: ' . $ticketDetails['details'];
-        $logSql = "INSERT INTO tblticketlogs (ticketNumber, action, performedBy, datePerformed, details) 
-                  VALUES (?, ?, ?, ?, ?)";
-        
-        if ($logStmt = mysqli_prepare($link, $logSql)) {
-            mysqli_stmt_bind_param($logStmt, "sssss", $ticketToDelete, $action, $_SESSION['username'], $dateNow, $details);
-            @mysqli_stmt_execute($logStmt);
-            mysqli_stmt_close($logStmt);
-        }
-    }
-    
-    // Delete all logs related to this ticket
-    $sqlDeleteLogs = "DELETE FROM tblticketlogs WHERE ticketNumber = ?";
-    if ($stmtLogs = mysqli_prepare($link, $sqlDeleteLogs)) {
-        mysqli_stmt_bind_param($stmtLogs, "s", $ticketToDelete);
-        @mysqli_stmt_execute($stmtLogs);
-        mysqli_stmt_close($stmtLogs);
-    }
-    
-    // Delete ticket
-    $sqlDelete = "DELETE FROM tbltickets WHERE ticketNumber = ?";
-    if ($stmtDelete = mysqli_prepare($link, $sqlDelete)) {
-        mysqli_stmt_bind_param($stmtDelete, "s", $ticketToDelete);
-        
-        if (mysqli_stmt_execute($stmtDelete)) {
-            $_SESSION['success'] = "Ticket deleted successfully!";
-        } else {
-            $_SESSION['error'] = "Error deleting ticket!";
-        }
-        mysqli_stmt_close($stmtDelete);
-    }
-    
-    header("location: accountManagement.php?tab=tickets");
-    exit;
 }
 ?>
 
@@ -716,9 +657,9 @@ if (isset($_SESSION['error'])) {
             <span class="nav-icon">⚙️</span>
             <span>Equipment Management</span>
         </a>
-        <a href="accountManagement.php?tab=tickets" class="nav-link" id="ticketLink">
-            <span class="nav-icon">🎫</span>
-            <span>Ticket Management</span>
+        <a href="index.php" class="nav-link" id="dashboardLink">
+            <span class="nav-icon">🏠</span>
+            <span>Dashboard</span>
         </a>
         <a href="logout.php" class="nav-link" id="logoutLink">
             <span class="nav-icon">🚪</span>
@@ -727,18 +668,8 @@ if (isset($_SESSION['error'])) {
     </div>
 </div>
 
-<!-- TABS -->
-<div class="tabs">
-    <button class="tab-btn <?= $activeTab === 'accounts' ? 'active' : '' ?>" onclick="switchTab('accounts')">
-        Accounts Management
-    </button>
-    <button class="tab-btn <?= $activeTab === 'tickets' ? 'active' : '' ?>" onclick="switchTab('tickets')">
-        Ticket Management
-    </button>
-</div>
-
-<!-- ACCOUNTS TAB -->
-<div id="accounts" class="tab-content <?= $activeTab === 'accounts' ? 'active' : '' ?>">
+<!-- ACCOUNTS CONTENT -->
+<div id="accounts" class="tab-content active">
     <form action="<?= htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=accounts" method="post">
         <div class="search-section">
             <input type="text" name="search" placeholder="Search by username or usertype">
@@ -769,10 +700,10 @@ if (isset($_SESSION['error'])) {
                 echo "<td>
                         <div class='action-buttons'>
                             <a href='updateAccount.php?username=" . urlencode($row['username']) . "' class='action-btn action-btn-edit'>Update</a>
-                            <button class='action-btn action-btn-delete'
-                                    onclick=\"confirmDeleteAccount('" . htmlspecialchars($row['username']) . "')\">
-                                Delete
-                            </button>
+                            <a href='accountManagement.php?tab=accounts&delete=" . urlencode($row['username']) . "'
+                               onclick=\"return confirm('Are you sure you want to delete this account?');\" class='action-btn action-btn-delete'>
+                               Delete
+                            </a>
                         </div>
                       </td>";
                 echo "</tr>";
@@ -809,263 +740,12 @@ if (isset($_SESSION['error'])) {
     ?>
 </div>
 
-<!-- TICKETS TAB -->
-<div id="tickets" class="tab-content <?= $activeTab === 'tickets' ? 'active' : '' ?>">
-    <?php
-    // Get all tickets for the logged-in user
-    $tickets = array();
-    $searchQuery = '';
-
-    $sql = "SELECT * FROM tbltickets WHERE createdBy = ? ORDER BY dateCreated DESC";
-
-    if ($stmt = mysqli_prepare($link, $sql)) {
-        mysqli_stmt_bind_param($stmt, "s", $_SESSION['username']);
-        
-        if (mysqli_stmt_execute($stmt)) {
-            $result = mysqli_stmt_get_result($stmt);
-            while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-                $tickets[] = $row;
-            }
-            mysqli_stmt_close($stmt);
-        }
-    }
-
-    // Filter tickets based on search
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnTicketSearch'])) {
-        $searchQuery = $_POST['ticketSearchInput'];
-        $filteredTickets = array();
-        
-        foreach ($tickets as $ticket) {
-            if (
-                stripos($ticket['ticketNumber'], $searchQuery) !== false ||
-                stripos($ticket['problem'], $searchQuery) !== false ||
-                stripos($ticket['status'], $searchQuery) !== false
-            ) {
-                $filteredTickets[] = $ticket;
-            }
-        }
-        $tickets = $filteredTickets;
-    }
-    ?>
-
-    <div style="margin-bottom: 20px;">
-        <a href="createTicket.php" class="add-new-btn">+ Add New Ticket</a>
-    </div>
-
-    <form method="POST" action="<?= htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=tickets">
-        <div class="search-section">
-            <input type="text" name="ticketSearchInput" placeholder="Search by Ticket Number, Problem, or Status..." value="<?= htmlspecialchars($searchQuery) ?>">
-            <button type="submit" name="btnTicketSearch">Search</button>
-            <?php if ($searchQuery): ?>
-                <a href="accountManagement.php?tab=tickets">Clear Search</a>
-            <?php endif; ?>
-        </div>
-    </form>
-
-    <?php if (count($tickets) > 0): ?>
-        <table class="ticket-table">
-            <thead>
-                <tr>
-                    <th>Ticket Number</th>
-                    <th>Problem</th>
-                    <th>Date Created</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($tickets as $ticket): ?>
-                    <tr>
-                        <td><strong><?= htmlspecialchars($ticket['ticketNumber']) ?></strong></td>
-                        <td>
-                            <span class="badge badge-<?= htmlspecialchars($ticket['problem']) ?>">
-                                <?= ucfirst(htmlspecialchars($ticket['problem'])) ?>
-                            </span>
-                        </td>
-                        <td><?= htmlspecialchars($ticket['dateCreated']) ?></td>
-                        <td>
-                            <span class="badge badge-<?= htmlspecialchars($ticket['status']) ?>">
-                                <?= ucfirst(htmlspecialchars($ticket['status'])) ?>
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="action-btn action-btn-view" 
-                                        onclick="viewDetails('<?= htmlspecialchars($ticket['ticketNumber']) ?>', 
-                                                              '<?= htmlspecialchars($ticket['problem']) ?>', 
-                                                              '<?= htmlspecialchars($ticket['status']) ?>', 
-                                                              '<?= htmlspecialchars($ticket['details']) ?>', 
-                                                              '<?= htmlspecialchars($ticket['dateCreated']) ?>', 
-                                                              '<?= htmlspecialchars($ticket['assignedTo'] ?? '-') ?>', 
-                                                              '<?= htmlspecialchars($ticket['dateAssigned'] ?? '-') ?>', 
-                                                              '<?= htmlspecialchars($ticket['dateCompleted'] ?? '-') ?>', 
-                                                              '<?= htmlspecialchars($ticket['approvedBy'] ?? '-') ?>', 
-                                                              '<?= htmlspecialchars($ticket['dateApproved'] ?? '-') ?>')">
-                                    Details
-                                </button>
-                                <a href="updateTicket.php?ticketNumber=<?= htmlspecialchars($ticket['ticketNumber']) ?>" 
-                                   class="action-btn action-btn-edit">Update</a>
-                                <button class="action-btn action-btn-delete" 
-                                        onclick="confirmDelete('<?= htmlspecialchars($ticket['ticketNumber']) ?>')">
-                                    Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php else: ?>
-        <div class="no-records">
-            <?php if ($searchQuery): ?>
-                <p>No tickets found matching your search.</p>
-            <?php else: ?>
-                <p>You have no tickets yet. <a href="createTicket.php" style="color: #2980b9; font-weight: bold;">Create one now</a></p>
-            <?php endif; ?>
-        </div>
-    <?php endif; ?>
-</div>
-
-<!-- Details Modal -->
-<div class="modal" id="detailsModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Ticket Details</h2>
-            <button class="close-modal" onclick="closeModal('detailsModal')">×</button>
-        </div>
-        <div id="modalBody"></div>
-        <div style="margin-top: 20px; text-align: right;">
-            <button class="action-btn action-btn-view" onclick="closeModal('detailsModal')">Close</button>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal for Tickets -->
-<div class="modal" id="deleteModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Confirm Delete</h2>
-            <button class="close-modal" onclick="closeModal('deleteModal')">×</button>
-        </div>
-        <p>Are you sure you want to delete this ticket? This action cannot be undone.</p>
-        <div style="margin-top: 20px; text-align: right;">
-            <form method="POST" style="display: inline;">
-                <input type="hidden" name="ticketToDelete" id="ticketToDeleteInput">
-                <button type="submit" class="action-btn action-btn-delete">Delete</button>
-                <button type="button" class="action-btn action-btn-view" onclick="closeModal('deleteModal')">Cancel</button>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal for Accounts -->
-<div class="modal" id="deleteAccountModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Confirm Delete</h2>
-            <button class="close-modal" onclick="closeModal('deleteAccountModal')">×</button>
-        </div>
-        <p>Are you sure you want to delete this account? This action cannot be undone.</p>
-        <div style="margin-top: 20px; text-align: right;">
-            <form method="POST" style="display: inline;">
-                <input type="hidden" name="accountToDelete" id="accountToDeleteInput">
-                <button type="submit" class="action-btn action-btn-delete">Delete</button>
-                <button type="button" class="action-btn action-btn-view" onclick="closeModal('deleteAccountModal')">Cancel</button>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
-    function switchTab(tabName) {
-        // Hide all tab contents
-        const contents = document.querySelectorAll('.tab-content');
-        contents.forEach(content => content.classList.remove('active'));
-        
-        // Show selected tab content
-        document.getElementById(tabName).classList.add('active');
-        
-        // Update active button
-        const buttons = document.querySelectorAll('.tab-btn');
-        buttons.forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-
-        // Update URL
-        window.history.pushState(null, '', '?tab=' + tabName);
-    }
-
-    function viewDetails(ticketNumber, problem, status, details, dateCreated, assignedTo, dateAssigned, dateCompleted, approvedBy, dateApproved) {
-        const modalBody = document.getElementById('modalBody');
-        modalBody.innerHTML = `
-            <div class="detail-row">
-                <div class="detail-label">Ticket Number:</div>
-                <div class="detail-value">${ticketNumber}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Problem:</div>
-                <div class="detail-value"><span class="badge badge-${problem}">${problem.charAt(0).toUpperCase() + problem.slice(1)}</span></div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Details:</div>
-                <div class="detail-value">${details}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Status:</div>
-                <div class="detail-value"><span class="badge badge-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Date Created:</div>
-                <div class="detail-value">${dateCreated}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Assigned To:</div>
-                <div class="detail-value">${assignedTo}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Date Assigned:</div>
-                <div class="detail-value">${dateAssigned}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Date Completed:</div>
-                <div class="detail-value">${dateCompleted}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Approved By:</div>
-                <div class="detail-value">${approvedBy}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Date Approved:</div>
-                <div class="detail-value">${dateApproved}</div>
-            </div>
-        `;
-        openModal('detailsModal');
-    }
-
-    function confirmDelete(ticketNumber) {
-        document.getElementById('ticketToDeleteInput').value = ticketNumber;
-        openModal('deleteModal');
-    }
-
-    function confirmDeleteAccount(username) {
-        document.getElementById('accountToDeleteInput').value = username;
-        openModal('deleteAccountModal');
-    }
-
-    function openModal(modalId) {
-        document.getElementById(modalId).classList.add('active');
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).classList.remove('active');
-    }
-
-    // Close modal when clicking outside of it
-    window.onclick = function(event) {
-        const modals = document.querySelectorAll('.modal.active');
-        modals.forEach(modal => {
-            if (event.target === modal) {
-                modal.classList.remove('active');
-            }
+    function openModal(id)  { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    window.onclick = function(e) {
+        document.querySelectorAll('.modal.active').forEach(m => {
+            if (e.target === m) m.classList.remove('active');
         });
     }
 </script>

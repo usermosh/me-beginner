@@ -29,7 +29,7 @@ if (isset($_POST['btnsubmit'])) {
                 $_SESSION['usertype'] = $account['usertype'];
 
                 $_SESSION['success'] = "Login successful!";
-                header("location: accountManagement.php");
+                header("location: index.php");
                 exit;
 
             } else {
@@ -69,7 +69,6 @@ if (isset($_POST['btnsubmit'])) {
             overflow: hidden;
         }
 
-        /* Animated background circles */
         body::before {
             content: '';
             position: fixed;
@@ -286,7 +285,6 @@ if (isset($_POST['btnsubmit'])) {
     <h1>🔐 Technical System</h1>
     <p class="subtitle">Management Dashboard</p>
 
-    <!-- SESSION MESSAGE -->
     <div class="message">
         <?php
         if (isset($_SESSION['success'])) {
@@ -317,7 +315,6 @@ if (isset($_POST['btnsubmit'])) {
             <input type="password" name="txtpassword" id="password" required autocomplete="current-password">
         </div>
 
-        <!-- SHOW PASSWORD CHECKBOX -->
         <div class="show-pass">
             <label>
                 <input type="checkbox"

@@ -1,11 +1,10 @@
 <?php
-session_start();
 require_once "sessionChecker.php";
 require_once "config.php";
 
 // Check if user type is USER
 if ($_SESSION['usertype'] !== 'USER') {
-    header("location: accountManagement.php");
+    header("location: index.php");
     exit;
 }
 
@@ -48,7 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSearch'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
     $ticketToDelete = $_POST['ticketToDelete'];
     
-    // Get current ticket details for log
     $sqlGet = "SELECT * FROM tbltickets WHERE ticketNumber = ?";
     if ($stmtGet = mysqli_prepare($link, $sqlGet)) {
         mysqli_stmt_bind_param($stmtGet, "s", $ticketToDelete);
@@ -57,8 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
         $ticketDetails = mysqli_fetch_array($resultGet, MYSQLI_ASSOC);
         mysqli_stmt_close($stmtGet);
     }
+
+    // Only allow delete for tickets belonging to this user
+    if (!$ticketDetails) {
+        $_SESSION['error'] = "Ticket not found.";
+        header("location: ticketManagement.php");
+        exit;
+    }
     
-    // Log the deletion BEFORE deleting (to satisfy FK constraint)
     if ($ticketDetails) {
         $action = 'deleted';
         $dateNow = date('m/d/Y g:i A');
@@ -73,7 +77,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
         }
     }
     
-    // Delete all logs related to this ticket
     $sqlDeleteLogs = "DELETE FROM tblticketlogs WHERE ticketNumber = ?";
     if ($stmtLogs = mysqli_prepare($link, $sqlDeleteLogs)) {
         mysqli_stmt_bind_param($stmtLogs, "s", $ticketToDelete);
@@ -81,7 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
         mysqli_stmt_close($stmtLogs);
     }
     
-    // Delete ticket
     $sqlDelete = "DELETE FROM tbltickets WHERE ticketNumber = ?";
     if ($stmtDelete = mysqli_prepare($link, $sqlDelete)) {
         mysqli_stmt_bind_param($stmtDelete, "s", $ticketToDelete);
@@ -100,211 +102,306 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Ticket Management - User</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tickets - Technical Management System</title>
+
     <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+
         body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1d3d 0%, #1a2e5e 50%, #0d1a33 100%);
+            background-attachment: fixed;
             min-height: 100vh;
-            padding: 20px;
+            padding: 30px 20px;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
+        .container { max-width: 1400px; margin: 0 auto; }
 
-        .header {
+        /* Header */
+        .header-section {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 25px 30px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #2c3e50;
-            padding-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
         }
 
-        .header h1 {
-            color: #2c3e50;
-            margin: 0;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-icon {
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, #8e44ad, #6c3483);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(142,68,173,0.3);
+        }
+
+        .header-icon svg {
+            width: 28px; height: 28px;
+            stroke: white; stroke-width: 2;
+        }
+
+        .header-text h1 {
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .header-text p {
+            color: #a0c4ff;
+            font-size: 13px;
         }
 
         .header-buttons {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .btn {
-            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            border-radius: 8px;
             font-size: 14px;
-            transition: background 0.3s;
+            font-weight: 600;
+            cursor: pointer;
             text-decoration: none;
-            display: inline-block;
+            transition: all 0.3s ease;
         }
 
-        .btn-primary {
-            background: #2980b9;
+        .btn svg { width: 18px; height: 18px; }
+
+        .btn-back {
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-back:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #27ae60, #1a7a40);
             color: white;
+            box-shadow: 0 4px 15px rgba(39,174,96,0.3);
         }
 
-        .btn-primary:hover {
-            background: #1f6391;
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39,174,96,0.4);
         }
 
-        .btn-success {
-            background: #27ae60;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #1e8449;
-        }
-
-        .btn-warning {
-            background: #f39c12;
-            color: white;
-        }
-
-        .btn-warning:hover {
-            background: #d68910;
-        }
-
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-
-        .btn-info {
-            background: #3498db;
-            color: white;
-        }
-
-        .btn-info:hover {
-            background: #2980b9;
-        }
-
-        .back-link {
-            background: #95a5a6;
-            color: white;
-        }
-
-        .back-link:hover {
-            background: #7f8c8d;
-        }
-
+        /* Messages */
         .message {
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.4s ease;
         }
+
+        @keyframes slideDown {
+            from { opacity:0; transform:translateY(-10px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+
+        .message svg { width:22px; height:22px; }
 
         .success {
-            background: #c8f7c5;
-            border: 1px solid #4caf50;
-            color: #2d662d;
+            background: linear-gradient(135deg,#d4edda,#c3e6cb);
+            border-color:#27ae60; color:#155724;
         }
+        .success svg { stroke:#27ae60; }
 
         .error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background: linear-gradient(135deg,#f8d7da,#f5c2c7);
+            border-color:#e74c3c; color:#721c24;
         }
+        .error svg { stroke:#e74c3c; }
 
+        /* Search */
         .search-section {
-            margin-bottom: 20px;
+            background: rgba(255,255,255,0.95);
+            padding: 20px 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .search-controls {
             display: flex;
-            gap: 10px;
-            align-items: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
-        .search-section input {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+        .search-controls input {
             flex: 1;
+            min-width: 300px;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
         }
 
-        .table-responsive {
-            overflow-x: auto;
+        .search-controls input:focus {
+            outline: none;
+            border-color: #8e44ad;
+            box-shadow: 0 0 0 4px rgba(142,68,173,0.1);
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, #8e44ad, #6c3483);
+            color: white;
+            box-shadow: 0 4px 15px rgba(142,68,173,0.3);
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(142,68,173,0.4);
+        }
+
+        .btn-clear {
+            background: rgba(0,0,0,0.05);
+            color: #555;
+            border: 2px solid #ddd;
+        }
+
+        .btn-clear:hover {
+            background: rgba(0,0,0,0.08);
+        }
+
+        /* Table */
+        .table-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
         }
 
-        th, td {
-            padding: 12px;
+        table thead {
+            background: linear-gradient(135deg, #1a3a7e, #2a5298);
+            color: #ffffff;
+        }
+
+        table th {
+            padding: 16px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        th {
-            background: #34495e;
-            color: white;
-            font-weight: bold;
+        table tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s ease;
         }
 
-        tr:hover {
-            background: #f5f5f5;
+        table tbody tr:hover { background-color: #f0f8ff; }
+
+        table td {
+            padding: 14px 16px;
+            color: #2c3e50;
         }
 
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .badge-pending { background:#fff3cd; color:#856404; }
+        .badge-inprogress { background:#cfe2ff; color:#084298; }
+        .badge-completed { background:#d1e7dd; color:#0a3622; }
+
+        .badge-hardware { background:#f8d7da; color:#721c24; }
+        .badge-software { background:#e7d6f5; color:#4a235a; }
+        .badge-connection { background:#d1f2eb; color:#0a3622; }
+
+        /* Action buttons */
         .action-buttons {
             display: flex;
-            gap: 5px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
         .action-btn {
-            padding: 6px 12px;
+            padding: 8px 14px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-            transition: background 0.3s;
-        }
-
-        .action-btn-edit {
-            background: #f39c12;
-            color: white;
-        }
-
-        .action-btn-edit:hover {
-            background: #d68910;
-        }
-
-        .action-btn-delete {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .action-btn-delete:hover {
-            background: #c0392b;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
 
         .action-btn-view {
-            background: #3498db;
+            background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
         }
 
         .action-btn-view:hover {
-            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52,152,219,0.4);
         }
 
+        .action-btn-edit {
+            background: linear-gradient(135deg, #f39c12, #d68910);
+            color: white;
+        }
+
+        .action-btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(243,156,18,0.4);
+        }
+
+        .action-btn-delete {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .action-btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231,76,60,0.4);
+        }
+
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -312,21 +409,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            backdrop-filter: blur(4px);
         }
 
-        .modal.active {
-            display: flex;
-        }
+        .modal.active { display: flex; }
 
         .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            background: rgba(255,255,255,0.98);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             max-width: 600px;
             width: 90%;
             max-height: 80vh;
@@ -337,293 +433,369 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #2c3e50;
-            padding-bottom: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #8e44ad;
+            padding-bottom: 15px;
         }
 
         .modal-header h2 {
             margin: 0;
-            color: #2c3e50;
+            color: #8e44ad;
         }
 
         .close-modal {
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
-            color: #2c3e50;
+            color: #8e44ad;
         }
 
         .detail-row {
-            margin-bottom: 15px;
-            padding: 10px;
-            background: #ecf0f1;
-            border-radius: 4px;
+            margin-bottom: 18px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f0f8ff, #ffffff);
+            border-radius: 8px;
+            border-left: 4px solid #8e44ad;
         }
 
         .detail-label {
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
+            font-weight: 700;
+            color: #6c3483;
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
         }
 
         .detail-value {
-            color: #555;
-            word-wrap: break-word;
+            color: #34495e;
+            font-size: 14px;
         }
 
         .no-tickets {
             text-align: center;
+            padding: 60px 20px;
+        }
+
+        .no-tickets svg {
+            width: 64px; height: 64px;
+            stroke: #8e44ad; stroke-width: 2;
+            margin-bottom: 20px;
+        }
+
+        .no-tickets h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .no-tickets p {
             color: #7f8c8d;
-            padding: 40px;
-            font-size: 18px;
+            margin-bottom: 20px;
         }
 
-        .badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .badge-pending {
-            background: #f39c12;
+        .no-tickets a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #8e44ad, #6c3483);
             color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
 
-        .badge-assigned {
-            background: #3498db;
-            color: white;
+        .no-tickets a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(142,68,173,0.4);
         }
 
-        .badge-completed {
-            background: #27ae60;
-            color: white;
-        }
+        @media (max-width: 768px) {
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
 
-        .badge-approved {
-            background: #2c3e50;
-            color: white;
-        }
+            .search-controls {
+                flex-direction: column;
+            }
 
-        .badge-hardware {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .badge-software {
-            background: #9b59b6;
-            color: white;
-        }
-
-        .badge-connection {
-            background: #1abc9c;
-            color: white;
+            .search-controls input {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>My Tickets</h1>
-            <div class="header-buttons">
-                <a href="../index.php" class="btn back-link">← Back to Dashboard</a>
-                <a href="createTicket.php" class="btn btn-success">+ Add New Ticket</a>
+
+<div class="container">
+    <div class="header-section">
+        <div class="header-left">
+            <div class="header-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M14 2v6h6M16 13H8m8 4H8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="header-text">
+                <h1>My Tickets</h1>
+                <p>Manage your technical support requests</p>
             </div>
         </div>
+        <div class="header-buttons">
+            <a href="index.php" class="btn btn-back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Dashboard
+            </a>
+            <a href="createTicket.php" class="btn btn-add">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                New Ticket
+            </a>
+        </div>
+    </div>
 
-        <?php
-        if (isset($_SESSION['success'])) {
-            echo "<div class='message success'>{$_SESSION['success']}</div>";
-            unset($_SESSION['success']);
-        }
+    <?php
+    if (isset($_SESSION['success'])) {
+        echo "<div class='message success'>
+                <svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>
+                    <path d='M22 11.08V12a10 10 0 1 1-5.93-9.14' stroke-linecap='round' stroke-linejoin='round'/>
+                    <path d='M22 4 12 14.01l-3-3' stroke-linecap='round' stroke-linejoin='round'/>
+                </svg>
+                {$_SESSION['success']}
+              </div>";
+        unset($_SESSION['success']);
+    }
+    if (isset($_SESSION['error'])) {
+        echo "<div class='message error'>
+                <svg viewBox='0 0 24 24' fill='none' stroke='currentColor'>
+                    <circle cx='12' cy='12' r='10' stroke-linecap='round' stroke-linejoin='round'/>
+                    <path d='M15 9l-6 6M9 9l6 6' stroke-linecap='round' stroke-linejoin='round'/>
+                </svg>
+                {$_SESSION['error']}
+              </div>";
+        unset($_SESSION['error']);
+    }
+    ?>
 
-        if (isset($_SESSION['error'])) {
-            echo "<div class='message error'>{$_SESSION['error']}</div>";
-            unset($_SESSION['error']);
-        }
-        ?>
-
-        <div class="search-section">
-            <form method="POST" style="display: flex; gap: 10px; flex: 1;">
-                <input type="text" name="searchInput" placeholder="Search by Ticket Number, Problem, or Status..." 
+    <div class="search-section">
+        <form method="POST">
+            <div class="search-controls">
+                <input type="text" name="searchInput" 
+                       placeholder="Search by Ticket Number, Problem, or Status..." 
                        value="<?= htmlspecialchars($searchQuery) ?>">
-                <button type="submit" name="btnSearch" class="btn btn-primary">Search</button>
+                <button type="submit" name="btnSearch" class="btn btn-search">Search</button>
                 <?php if ($searchQuery): ?>
-                    <a href="ticketManagement.php" class="btn btn-primary">Clear Search</a>
+                    <a href="ticketManagement.php" class="btn btn-clear">Clear</a>
                 <?php endif; ?>
+            </div>
+        </form>
+    </div>
+
+    <?php if (count($tickets) > 0): ?>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ticket Number</th>
+                    <th>Problem</th>
+                    <th>Date Created</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($tickets as $ticket): ?>
+                <tr>
+                    <td><strong><?= htmlspecialchars($ticket['ticketNumber']) ?></strong></td>
+                    <td>
+                        <span class="badge badge-<?= htmlspecialchars($ticket['problem']) ?>">
+                            <?= ucfirst(htmlspecialchars($ticket['problem'])) ?>
+                        </span>
+                    </td>
+                    <td><?= htmlspecialchars($ticket['dateCreated']) ?></td>
+                    <td>
+                        <span class="badge badge-<?= htmlspecialchars($ticket['status']) ?>">
+                            <?= ucfirst(htmlspecialchars($ticket['status'])) ?>
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn action-btn-view" 
+                                    onclick="viewDetails('<?= htmlspecialchars($ticket['ticketNumber']) ?>', 
+                                                          '<?= htmlspecialchars($ticket['problem']) ?>', 
+                                                          '<?= htmlspecialchars($ticket['status']) ?>', 
+                                                          '<?= htmlspecialchars($ticket['details']) ?>', 
+                                                          '<?= htmlspecialchars($ticket['dateCreated']) ?>', 
+                                                          '<?= htmlspecialchars($ticket['assignedTo'] ?? '-') ?>', 
+                                                          '<?= htmlspecialchars($ticket['dateAssigned'] ?? '-') ?>', 
+                                                          '<?= htmlspecialchars($ticket['dateCompleted'] ?? '-') ?>', 
+                                                          '<?= htmlspecialchars($ticket['approvedBy'] ?? '-') ?>', 
+                                                          '<?= htmlspecialchars($ticket['dateApproved'] ?? '-') ?>')">
+                                Details
+                            </button>
+                            <a href="updateTicket.php?ticketNumber=<?= htmlspecialchars($ticket['ticketNumber']) ?>" 
+                               class="action-btn action-btn-edit">Update</a>
+                            <button class="action-btn action-btn-delete" 
+                                    onclick="confirmDelete('<?= htmlspecialchars($ticket['ticketNumber']) ?>')">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <?php else: ?>
+    <div class="table-container">
+        <div class="no-tickets">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14 2v6h6M12 18v-6M9 15h6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h3>
+                <?php if ($searchQuery): ?>
+                    No tickets found matching your search
+                <?php else: ?>
+                    No Tickets Yet
+                <?php endif; ?>
+            </h3>
+            <p>
+                <?php if ($searchQuery): ?>
+                    Try different search keywords or clear the search filter.
+                <?php else: ?>
+                    You haven't created any support tickets yet.
+                <?php endif; ?>
+            </p>
+            <?php if (!$searchQuery): ?>
+                <a href="createTicket.php">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Create Your First Ticket
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>
+
+<!-- Modals -->
+<div class="modal" id="detailsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Ticket Details</h2>
+            <button class="close-modal" onclick="closeModal('detailsModal')">×</button>
+        </div>
+        <div id="modalBody"></div>
+        <div style="margin-top: 20px; text-align: right;">
+            <button class="btn btn-search" onclick="closeModal('detailsModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirm Delete</h2>
+            <button class="close-modal" onclick="closeModal('deleteModal')">×</button>
+        </div>
+        <p style="padding: 20px 0;">Are you sure you want to delete this ticket? This action cannot be undone.</p>
+        <div style="margin-top: 20px; text-align: right;">
+            <form method="POST" style="display: inline;">
+                <input type="hidden" name="ticketToDelete" id="ticketToDeleteInput">
+                <button type="submit" class="btn" style="background:#e74c3c; color:white;">Delete</button>
+                <button type="button" class="btn btn-clear" onclick="closeModal('deleteModal')">Cancel</button>
             </form>
         </div>
-
-        <?php if (count($tickets) > 0): ?>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ticket Number</th>
-                            <th>Problem</th>
-                            <th>Date Created</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($tickets as $ticket): ?>
-                            <tr>
-                                <td><strong><?= htmlspecialchars($ticket['ticketNumber']) ?></strong></td>
-                                <td>
-                                    <span class="badge badge-<?= htmlspecialchars($ticket['problem']) ?>">
-                                        <?= ucfirst(htmlspecialchars($ticket['problem'])) ?>
-                                    </span>
-                                </td>
-                                <td><?= htmlspecialchars($ticket['dateCreated']) ?></td>
-                                <td>
-                                    <span class="badge badge-<?= htmlspecialchars($ticket['status']) ?>">
-                                        <?= ucfirst(htmlspecialchars($ticket['status'])) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="action-btn action-btn-view" 
-                                                onclick="viewDetails('<?= htmlspecialchars($ticket['ticketNumber']) ?>', 
-                                                                      '<?= htmlspecialchars($ticket['problem']) ?>', 
-                                                                      '<?= htmlspecialchars($ticket['status']) ?>', 
-                                                                      '<?= htmlspecialchars($ticket['details']) ?>', 
-                                                                      '<?= htmlspecialchars($ticket['dateCreated']) ?>', 
-                                                                      '<?= htmlspecialchars($ticket['assignedTo'] ?? '-') ?>', 
-                                                                      '<?= htmlspecialchars($ticket['dateAssigned'] ?? '-') ?>', 
-                                                                      '<?= htmlspecialchars($ticket['dateCompleted'] ?? '-') ?>', 
-                                                                      '<?= htmlspecialchars($ticket['approvedBy'] ?? '-') ?>', 
-                                                                      '<?= htmlspecialchars($ticket['dateApproved'] ?? '-') ?>')">
-                                            Details
-                                        </button>
-                                        <a href="updateTicket.php?ticketNumber=<?= htmlspecialchars($ticket['ticketNumber']) ?>" 
-                                           class="action-btn action-btn-edit">Update</a>
-                                        <button class="action-btn action-btn-delete" 
-                                                onclick="confirmDelete('<?= htmlspecialchars($ticket['ticketNumber']) ?>')">
-                                            Delete
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php else: ?>
-            <div class="no-tickets">
-                <?php if ($searchQuery): ?>
-                    <p>No tickets found matching your search.</p>
-                <?php else: ?>
-                    <p>You have no tickets yet. <a href="createTicket.php" style="color: #2980b9;">Create one now</a></p>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
     </div>
+</div>
 
-    <!-- Details Modal -->
-    <div class="modal" id="detailsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Ticket Details</h2>
-                <button class="close-modal" onclick="closeModal('detailsModal')">×</button>
-            </div>
-            <div id="modalBody"></div>
-            <div style="margin-top: 20px; text-align: right;">
-                <button class="btn btn-primary" onclick="closeModal('detailsModal')">Close</button>
-            </div>
+<script>
+function viewDetails(ticketNumber, problem, status, details, dateCreated, assignedTo, dateAssigned, dateCompleted, approvedBy, dateApproved) {
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <div class="detail-row">
+            <div class="detail-label">Ticket Number:</div>
+            <div class="detail-value">${ticketNumber}</div>
         </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div class="modal" id="deleteModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Confirm Delete</h2>
-                <button class="close-modal" onclick="closeModal('deleteModal')">×</button>
-            </div>
-            <p>Are you sure you want to delete this ticket? This action cannot be undone.</p>
-            <div style="margin-top: 20px; text-align: right;">
-                <form method="POST" style="display: inline;">
-                    <input type="hidden" name="ticketToDelete" id="ticketToDeleteInput">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                    <button type="button" class="btn btn-primary" onclick="closeModal('deleteModal')">Cancel</button>
-                </form>
-            </div>
+        <div class="detail-row">
+            <div class="detail-label">Problem:</div>
+            <div class="detail-value"><span class="badge badge-${problem}">${problem}</span></div>
         </div>
-    </div>
+        <div class="detail-row">
+            <div class="detail-label">Details:</div>
+            <div class="detail-value">${details}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Status:</div>
+            <div class="detail-value"><span class="badge badge-${status}">${status}</span></div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Date Created:</div>
+            <div class="detail-value">${dateCreated}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Assigned To:</div>
+            <div class="detail-value">${assignedTo}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Date Assigned:</div>
+            <div class="detail-value">${dateAssigned}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Date Completed:</div>
+            <div class="detail-value">${dateCompleted}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Approved By:</div>
+            <div class="detail-value">${approvedBy}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Date Approved:</div>
+            <div class="detail-value">${dateApproved}</div>
+        </div>
+    `;
+    openModal('detailsModal');
+}
 
-    <script>
-        function viewDetails(ticketNumber, problem, status, details, dateCreated, assignedTo, dateAssigned, dateCompleted, approvedBy, dateApproved) {
-            const modalBody = document.getElementById('modalBody');
-            modalBody.innerHTML = `
-                <div class="detail-row">
-                    <div class="detail-label">Ticket Number:</div>
-                    <div class="detail-value">${ticketNumber}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Problem:</div>
-                    <div class="detail-value"><span class="badge badge-${problem}">${problem.charAt(0).toUpperCase() + problem.slice(1)}</span></div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Details:</div>
-                    <div class="detail-value">${details}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Status:</div>
-                    <div class="detail-value"><span class="badge badge-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Date Created:</div>
-                    <div class="detail-value">${dateCreated}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Assigned To:</div>
-                    <div class="detail-value">${assignedTo}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Date Assigned:</div>
-                    <div class="detail-value">${dateAssigned}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Date Completed:</div>
-                    <div class="detail-value">${dateCompleted}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Approved By:</div>
-                    <div class="detail-value">${approvedBy}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Date Approved:</div>
-                    <div class="detail-value">${dateApproved}</div>
-                </div>
-            `;
-            openModal('detailsModal');
-        }
+function confirmDelete(ticketNumber) {
+    document.getElementById('ticketToDeleteInput').value = ticketNumber;
+    openModal('deleteModal');
+}
 
-        function confirmDelete(ticketNumber) {
-            document.getElementById('ticketToDeleteInput').value = ticketNumber;
-            openModal('deleteModal');
-        }
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+}
 
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
+window.onclick = function(event) {
+    const modals = document.querySelectorAll('.modal.active');
+    modals.forEach(modal => {
+        if (event.target === modal) {
+            modal.classList.remove('active');
         }
+    });
+}
 
-        // Close modal when clicking outside of it
-        window.onclick = function(event) {
-            const modals = document.querySelectorAll('.modal.active');
-            modals.forEach(modal => {
-                if (event.target === modal) {
-                    modal.classList.remove('active');
-                }
-            });
-        }
-    </script>
+setTimeout(() => {
+    document.querySelectorAll('.message').forEach(msg => {
+        msg.style.transition = 'opacity 0.4s';
+        msg.style.opacity = '0';
+        setTimeout(() => msg.remove(), 400);
+    });
+}, 5000);
+</script>
+
 </body>
 </html>

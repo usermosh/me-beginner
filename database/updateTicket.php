@@ -4,7 +4,7 @@ require_once "config.php";
 
 // Get ticket number from query string
 if (!isset($_GET['ticketNumber'])) {
-    header("location: accountManagement.php?tab=tickets");
+    header("location: ticketManagement.php");
     exit;
 }
 
@@ -24,7 +24,7 @@ if ($stmt = mysqli_prepare($link, $sql)) {
             $ticket = mysqli_fetch_array($result, MYSQLI_ASSOC);
         } else {
             $_SESSION['error'] = "Ticket not found!";
-            header("location: accountManagement.php?tab=tickets");
+            header("location: ticketManagement.php");
             exit;
         }
         mysqli_stmt_close($stmt);
@@ -35,6 +35,13 @@ if ($stmt = mysqli_prepare($link, $sql)) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
     $newProblem = $_POST['problem'];
     $newDetails = $_POST['details'];
+
+    // Only allow update if status is PENDING
+    if (strtoupper(trim($ticket['status'])) !== 'PENDING') {
+        $_SESSION['error'] = "Cannot update ticket. Only PENDING tickets can be updated. This ticket is " . $ticket['status'] . ".";
+        header("location: ticketManagement.php");
+        exit;
+    }
 
     // Update ticket
     $updateSql = "UPDATE tbltickets SET problem = ?, details = ? WHERE ticketNumber = ?";
@@ -59,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
             }
 
             $_SESSION['success'] = "Ticket updated successfully!";
-            header("location: accountManagement.php?tab=tickets");
+            header("location: ticketManagement.php");
             exit;
         } else {
             $_SESSION['error'] = "Error updating ticket!";
@@ -541,7 +548,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
                             Save Changes
                         </button>
                         <!-- Anchor tag so it always works regardless of form state -->
-                        <a href="accountManagement.php?tab=tickets" class="btn btn-cancel">
+                        <a href="ticketManagement.php" class="btn btn-cancel">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -559,7 +566,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
                     </svg>
                     <h3>Ticket Not Found</h3>
                     <p>This ticket doesn't exist or you don't have permission to update it.</p>
-                    <a href="accountManagement.php?tab=tickets">
+                    <a href="ticketManagement.php">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>

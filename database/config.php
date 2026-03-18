@@ -2,7 +2,7 @@
 // define  database connection
 define('DB_SERVER', '127.0.0.1');
 define('DB_USERNAME', 'mark');
-define('DB_PASSWORD', 'acobado');
+define('DB_PASSWORD', 'mark123');
 define('DB_NAME', 'itc127-cs2a-2026');
 
 // attem pt to connect to database
