@@ -37,6 +37,23 @@ if (isset($_POST['btnsubmit'])) {
                     );
 
                     if (mysqli_stmt_execute($stmt)) {
+
+                        // Insert log
+                        $logSql = "INSERT INTO tbllogs(datelog, timelog, action, module, performedby, performedto)
+                                   VALUES (?, ?, ?, ?, ?, ?)";
+                        if ($logStmt = mysqli_prepare($link, $logSql)) {
+                            $date   = date("d/m/Y");
+                            $time   = date("h:i:sa");
+                            $action = "Create account";
+                            $module = "Accounts Management";
+                            mysqli_stmt_bind_param($logStmt, "ssssss",
+                                $date, $time, $action, $module,
+                                $_SESSION['username'], $_POST['txtusername']
+                            );
+                            @mysqli_stmt_execute($logStmt);
+                            mysqli_stmt_close($logStmt);
+                        }
+
                         $_SESSION['success'] = "User account successfully created!";
                         header("location: accountManagement.php");
                         exit();

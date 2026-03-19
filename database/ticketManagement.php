@@ -56,34 +56,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticketToDelete'])) {
         mysqli_stmt_close($stmtGet);
     }
 
-    // Only allow delete for tickets belonging to this user
     if (!$ticketDetails) {
         $_SESSION['error'] = "Ticket not found.";
         header("location: ticketManagement.php");
         exit;
     }
-    
-    if ($ticketDetails) {
-        $action = 'deleted';
-        $dateNow = date('m/d/Y g:i A');
-        $details = 'Problem: ' . $ticketDetails['problem'] . ', Details: ' . $ticketDetails['details'];
-        $logSql = "INSERT INTO tblticketlogs (ticketNumber, action, performedBy, datePerformed, details) 
-                  VALUES (?, ?, ?, ?, ?)";
-        
-        if ($logStmt = mysqli_prepare($link, $logSql)) {
-            mysqli_stmt_bind_param($logStmt, "sssss", $ticketToDelete, $action, $_SESSION['username'], $dateNow, $details);
-            @mysqli_stmt_execute($logStmt);
-            mysqli_stmt_close($logStmt);
-        }
+
+    // Only allow delete if status is PENDING
+    if (strtoupper(trim($ticketDetails['status'])) !== 'PENDING') {
+        $_SESSION['error'] = "Cannot delete ticket. Only PENDING tickets can be deleted. This ticket is " . $ticketDetails['status'] . ".";
+        header("location: ticketManagement.php");
+        exit;
     }
     
-    $sqlDeleteLogs = "DELETE FROM tblticketlogs WHERE ticketNumber = ?";
+    // Delete logs from tbllogs first (FK: tbllogs.ticketNumber → tbltickets.ticketNumber)
+    $sqlDeleteLogs = "DELETE FROM tbllogs WHERE ticketNumber = ?";
     if ($stmtLogs = mysqli_prepare($link, $sqlDeleteLogs)) {
         mysqli_stmt_bind_param($stmtLogs, "s", $ticketToDelete);
-        @mysqli_stmt_execute($stmtLogs);
+        mysqli_stmt_execute($stmtLogs);
         mysqli_stmt_close($stmtLogs);
     }
-    
+
     $sqlDelete = "DELETE FROM tbltickets WHERE ticketNumber = ?";
     if ($stmtDelete = mysqli_prepare($link, $sqlDelete)) {
         mysqli_stmt_bind_param($stmtDelete, "s", $ticketToDelete);

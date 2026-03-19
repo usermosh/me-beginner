@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
             $dateNow = date('m/d/Y g:i A');
             $oldDetails = 'Previous - Problem: ' . $ticket['problem'] . ', Details: ' . substr($ticket['details'], 0, 100) . '...';
             $newLogDetails = 'New - Problem: ' . $newProblem . ', Details: ' . $newDetails;
-            $logSql = "INSERT INTO tblticketlogs (ticketNumber, action, performedBy, datePerformed, details) 
+            $logSql = "INSERT INTO tbllogs (ticketNumber, action, performedBy, datePerformed, details) 
                       VALUES (?, ?, ?, ?, ?)";
 
             if ($logStmt = mysqli_prepare($link, $logSql)) {

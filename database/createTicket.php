@@ -9,7 +9,7 @@ $ticketNumber = date('YmdHis');
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
     $problem = $_POST['problem'];
     $details = $_POST['details'];
-    $status = 'pending';
+    $status = 'PENDING';
     $createdBy = $_SESSION['username'];
     $dateCreated = date('m/d/Y g:i A');
 
@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
             // Log the creation
             $action = 'created';
             $logDetails = 'Problem: ' . $problem . ', Details: ' . $details;
-            $logSql = "INSERT INTO tblticketlogs (ticketNumber, action, performedBy, datePerformed, details) 
+            $logSql = "INSERT INTO tbllogs (ticketNumber, action, performedBy, datePerformed, details) 
                       VALUES (?, ?, ?, ?, ?)";
 
             if ($logStmt = mysqli_prepare($link, $logSql)) {
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnSave'])) {
             }
 
             $_SESSION['success'] = "Ticket created successfully! Ticket Number: " . $ticketNumber;
-            header("location: ticketManagement.php?tab=tickets");
+            header("location: ticketManagement.php");
             exit;
         } else {
             $_SESSION['error'] = "Error creating ticket!";

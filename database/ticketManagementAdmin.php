@@ -13,7 +13,7 @@ mysqli_query($link, "UPDATE tbltickets SET status='PENDING'      WHERE (status I
 mysqli_query($link, "UPDATE tbltickets SET status='ON-GOING'     WHERE (status IS NULL OR TRIM(status)='') AND assignedTo IS NOT NULL AND TRIM(assignedTo)!=''");
 mysqli_query($link, "UPDATE tbltickets SET status='ON-GOING'     WHERE LOWER(TRIM(status)) IN ('inprogress','in progress','in-progress','pendingapproval','pending approval','ongoing','on going','assigned')");
 mysqli_query($link, "UPDATE tbltickets SET status='FOR APPROVAL' WHERE LOWER(TRIM(status)) IN ('forapproval','for-approval','for approval')");
-mysqli_query($link, "UPDATE tbltickets SET status='CLOSED'       WHERE LOWER(TRIM(status)) IN ('close','approved','closed')");
+mysqli_query($link, "UPDATE tbltickets SET status='COMPLETED' WHERE LOWER(TRIM(status)) IN ('close','closed')");
 // ─────────────────────────────────────────────────────────────────────────
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -23,15 +23,13 @@ function normalizeStatus($s) {
     if ($s === 'pending') return 'PENDING';
     if (in_array($s, ['on-going','on going','ongoing','inprogress','in progress','in-progress','pendingapproval','assigned'])) return 'ON-GOING';
     if (in_array($s, ['for approval','forapproval','for-approval'])) return 'FOR APPROVAL';
-    if ($s === 'approved') return 'APPROVED';
-    if ($s === 'completed') return 'COMPLETED';
-    if (in_array($s, ['closed','close'])) return 'CLOSED';
+    if (in_array($s, ['completed','closed','close','approved'])) return 'COMPLETED';
     return strtoupper($s);
 }
 
 function addLog($link, $ticketNumber, $action, $performedBy, $details) {
     $date = date('m/d/Y g:i A');
-    $sql  = "INSERT INTO tblticketlogs (ticketNumber, action, performedBy, datePerformed, details) VALUES (?,?,?,?,?)";
+    $sql  = "INSERT INTO tbllogs (ticketNumber, action, performedBy, datePerformed, details) VALUES (?,?,?,?,?)";
     if ($stmt = mysqli_prepare($link, $sql)) {
         mysqli_stmt_bind_param($stmt, "sssss", $ticketNumber, $action, $performedBy, $date, $details);
         mysqli_stmt_execute($stmt);
@@ -81,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['btnApprove'])) {
         $tn = $_POST['ticketNumber'];
 
-        // Fetch current status
         $curStatus = '';
         if ($s = mysqli_prepare($link, "SELECT status FROM tbltickets WHERE ticketNumber=?")) {
             mysqli_stmt_bind_param($s, "s", $tn);
@@ -97,13 +94,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $by     = $_SESSION['username'];
             $date   = date('m/d/Y g:i A');
-            $status = 'APPROVED';
+            $status = 'COMPLETED';
             $sql = "UPDATE tbltickets SET approvedBy=?, dateApproved=?, status=? WHERE ticketNumber=?";
             if ($stmt = mysqli_prepare($link, $sql)) {
                 mysqli_stmt_bind_param($stmt, "ssss", $by, $date, $status, $tn);
                 if (mysqli_stmt_execute($stmt)) {
-                    addLog($link, $tn, 'approved', $by, "Ticket approved by: $by. Status set to APPROVED. Waiting for technical to complete.");
-                    $_SESSION['success'] = "Ticket approved! Technical can now mark it as completed.";
+                    addLog($link, $tn, 'approved', $by, "Ticket approved by: $by. Status set to COMPLETED.");
+                    $_SESSION['success'] = "Ticket approved and marked as completed!";
                 } else { $_SESSION['error'] = "Error approving ticket."; }
                 mysqli_stmt_close($stmt);
             }
@@ -126,13 +123,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Only allow delete if status is COMPLETED or CLOSED
         $curStatus = normalizeStatus($ticketData['status'] ?? '');
-        if (!in_array($curStatus, ['COMPLETED', 'CLOSED'])) {
-            $_SESSION['error'] = "Cannot delete ticket. Only COMPLETED or CLOSED tickets can be deleted. This ticket is $curStatus.";
+        if ($curStatus !== 'COMPLETED') {
+            $_SESSION['error'] = "Cannot delete ticket. Only COMPLETED tickets can be deleted. This ticket is $curStatus.";
             header("location: ticketManagementAdmin.php"); exit;
         }
 
-        // Delete logs first (foreign key)
-        mysqli_query($link, "DELETE FROM tblticketlogs WHERE ticketNumber='".mysqli_real_escape_string($link, $tn)."'");
+        // Delete logs first (FK: tbllogs.ticketNumber → tbltickets.ticketNumber)
+        if ($s = mysqli_prepare($link, "DELETE FROM tbllogs WHERE ticketNumber=?")) {
+            mysqli_stmt_bind_param($s, "s", $tn);
+            mysqli_stmt_execute($s);
+            mysqli_stmt_close($s);
+        }
 
         // Delete ticket
         if ($s = mysqli_prepare($link, "DELETE FROM tbltickets WHERE ticketNumber=?")) {
@@ -170,7 +171,7 @@ $r = mysqli_query($link, "SELECT username FROM tblaccounts WHERE usertype='TECHN
 while ($row = mysqli_fetch_assoc($r)) $techAccounts[] = $row['username'];
 
 // ── Stats ─────────────────────────────────────────────────────────────────
-$stats = ['PENDING' => 0, 'ON-GOING' => 0, 'FOR APPROVAL' => 0, 'APPROVED' => 0, 'COMPLETED' => 0, 'CLOSED' => 0];
+$stats = ['PENDING' => 0, 'ON-GOING' => 0, 'FOR APPROVAL' => 0, 'COMPLETED' => 0];
 foreach ($tickets as $t) {
     $ns = normalizeStatus($t['status']);
     if (isset($stats[$ns])) $stats[$ns]++;
@@ -212,11 +213,11 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-g
 
 /* Stats */
 .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:18px;margin-bottom:22px}
-.stat-card{background:rgba(255,255,255,.95);border-radius:12px;padding:18px 20px;box-shadow:0 6px 20px rgba(0,0,0,.15);border-top:4px solid}
-.stat-card.total{border-color:#4a90e2} .stat-card.pending{border-color:#f39c12} .stat-card.ongoing{border-color:#3498db} .stat-card.forapproval{border-color:#9b59b6} .stat-card.approved{border-color:#1abc9c} .stat-card.completed{border-color:#e67e22} .stat-card.closed{border-color:#27ae60}
-.stat-number{font-size:26px;font-weight:700;margin-bottom:3px}
-.stat-card.total .stat-number{color:#4a90e2} .stat-card.pending .stat-number{color:#f39c12} .stat-card.ongoing .stat-number{color:#3498db} .stat-card.forapproval .stat-number{color:#9b59b6} .stat-card.approved .stat-number{color:#1abc9c} .stat-card.completed .stat-number{color:#e67e22} .stat-card.closed .stat-number{color:#27ae60}
-.stat-label{font-size:11px;font-weight:600;color:#7f8c8d;text-transform:uppercase;letter-spacing:.5px}
+.stat-card{background:rgba(255,255,255,.95);border-radius:12px;padding:22px 24px;box-shadow:0 6px 20px rgba(0,0,0,.15);border-top:4px solid}
+.stat-card.total{border-color:#4a90e2} .stat-card.pending{border-color:#f39c12} .stat-card.ongoing{border-color:#3498db} .stat-card.forapproval{border-color:#9b59b6} .stat-card.completed{border-color:#e67e22}
+.stat-number{font-size:32px;font-weight:700;margin-bottom:6px}
+.stat-card.total .stat-number{color:#4a90e2} .stat-card.pending .stat-number{color:#f39c12} .stat-card.ongoing .stat-number{color:#3498db} .stat-card.forapproval .stat-number{color:#9b59b6} .stat-card.completed .stat-number{color:#e67e22}
+.stat-label{font-size:12px;font-weight:600;color:#7f8c8d;text-transform:uppercase;letter-spacing:.5px}
 
 /* Search */
 .search-section{background:rgba(255,255,255,.95);padding:18px 22px;border-radius:12px;margin-bottom:22px;box-shadow:0 6px 18px rgba(0,0,0,.12)}
@@ -240,7 +241,7 @@ table td{padding:11px 14px;color:#2c3e50;font-size:13px}
 .badge-FOR-APPROVAL{background:#e7d6f5;color:#4a235a}
 .badge-APPROVED{background:#d1f2eb;color:#0a6b4a}
 .badge-COMPLETED{background:#fde8d8;color:#7d3c00}
-.badge-CLOSED{background:#d1e7dd;color:#0a3622}
+
 
 /* Action buttons */
 .action-buttons{display:flex;gap:5px;flex-wrap:wrap}
@@ -316,7 +317,6 @@ table td{padding:11px 14px;color:#2c3e50;font-size:13px}
     <div class="stat-card pending"><div class="stat-number"><?= $stats['PENDING'] ?></div><div class="stat-label">Pending</div></div>
     <div class="stat-card ongoing"><div class="stat-number"><?= $stats['ON-GOING'] ?></div><div class="stat-label">On-Going</div></div>
     <div class="stat-card forapproval"><div class="stat-number"><?= $stats['FOR APPROVAL'] ?></div><div class="stat-label">For Approval</div></div>
-    <div class="stat-card approved"><div class="stat-number"><?= $stats['APPROVED'] ?></div><div class="stat-label">Approved</div></div>
     <div class="stat-card completed"><div class="stat-number"><?= $stats['COMPLETED'] ?></div><div class="stat-label">Completed</div></div>
   </div>
 
@@ -412,7 +412,7 @@ table td{padding:11px 14px;color:#2c3e50;font-size:13px}
   <div class="modal-content">
     <div class="modal-header"><h2>✅ Approve Ticket</h2><button class="close-modal" onclick="closeModal('approveModal')">×</button></div>
     <div class="confirm-icon">✅</div>
-    <div class="confirm-text">Approve ticket <strong id="approveTNLabel"></strong>?<br>Status will be set to <strong>APPROVED</strong>. Technical can then mark it as completed.</div>
+    <div class="confirm-text">Approve ticket <strong id="approveTNLabel"></strong>?<br>Status will be set to <strong>COMPLETED</strong>.</div>
     <form method="POST" action="ticketManagementAdmin.php">
       <input type="hidden" name="ticketNumber" id="approveTN">
       <div class="modal-actions">
